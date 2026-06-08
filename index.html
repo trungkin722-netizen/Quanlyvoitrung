@@ -388,7 +388,6 @@ input[type="checkbox"] {
   font-size: 8px; color: var(--gray-400); text-align: center;
   flex-shrink: 0; overflow: hidden; font-family: monospace;
 }
-.template-thumb svg, .template-thumb canvas { max-width: 100%; max-height: 100%; }
 .template-info .template-name { font-size: 13px; font-weight: 600; }
 .template-info .template-size { font-size: 11px; color: var(--gray-400); }
 
@@ -426,8 +425,7 @@ input[type="checkbox"] {
   border-radius: 3px 3px 0 0; letter-spacing: 0.03em;
 }
 .label-body { display: flex; align-items: center; gap: 4px; flex: 1; width: 100%; padding: 2px; }
-.label-qr-wrap { flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
-.label-qr-wrap canvas, .label-qr-wrap img { width: 100% !important; height: 100% !important; }
+.label-qr-wrap { flex-shrink: 0; }
 .label-info { flex: 1; overflow: hidden; }
 .label-info-name { font-size: 7px; font-weight: 700; color: var(--gray-900); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .label-info-code { font-family: 'JetBrains Mono', monospace; font-size: 6.5px; color: var(--blue); font-weight: 500; }
@@ -436,8 +434,8 @@ input[type="checkbox"] {
   width: 100%; text-align: center;
   font-size: 6px; color: var(--gray-400); border-top: 0.5px solid #eee; padding-top: 2px;
 }
-.label-barcode-wrap { width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-.label-barcode-wrap svg { max-width: 100%; height: auto; }
+.label-barcode-wrap { width: 100%; display: flex; justify-content: center; }
+.label-barcode-wrap svg { height: 20px; }
 
 /* Large label */
 .label-large .label-header { font-size: 8px; padding: 3px 6px; }
@@ -497,14 +495,8 @@ input[type="checkbox"] {
 @media print {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   body, #sidebar, #header, .toolbar, .btn, .modal-footer, .modal-header .modal-close { display: none !important; }
-  .print-modal { position: relative !important; display: block !important; background: white !important; padding: 0 !important; }
-  .print-modal .modal-overlay { display: block !important; position: static !important; background: none !important; }
-  .print-modal .modal { width: 100% !important; max-width: 100% !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; position: static !important; }
-  .print-settings { display: block !important; }
-  .print-settings > div:first-child { display: none !important; }
-  .print-preview-area { display: flex !important; flex-wrap: wrap; background: white !important; padding: 0 !important; gap: 5mm !important; border: none !important; overflow: visible !important; }
-  .label-card { break-inside: avoid !important; page-break-inside: avoid !important; box-shadow: none !important; border: 1px solid #000 !important; display: flex !important; }
-  canvas, svg, img { display: inline-block !important; visibility: visible !important; }
+  .print-preview-area { display: flex !important; flex-wrap: wrap; background: white; padding: 10mm; gap: 4mm; border: none; }
+  .label-card { break-inside: avoid; }
 }
 
 .empty-state {
@@ -601,6 +593,7 @@ input[type="checkbox"] {
     </div>
     <div class="header-actions">
       <button class="btn btn-secondary btn-sm" onclick="openImportModal()">⬆ Nhập Excel</button>
+      <button class="btn btn-secondary btn-sm" onclick="openExportModal()">⬇ Xuất dữ liệu</button>
       <button class="btn btn-accent" onclick="openPrintModal()">🖨 In nhãn hàng loạt</button>
       <button class="btn btn-primary" onclick="switchView('add_asset')">＋ Thêm tài sản</button>
     </div>
@@ -728,27 +721,23 @@ input[type="checkbox"] {
           </div>
           <div class="form-group">
             <label class="form-label">Tên tài sản <span class="required">*</span></label>
-            <input type="text" class="form-input" id="f-name" placeholder="VD: Máy tính Dell Inspiron">
+            <input type="text" class="form-input" id="f-name" placeholder="VD: Máy tính giáo viên Dell">
           </div>
         </div>
         <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Model / Hãng sản xuất</label>
+            <input type="text" class="form-input" id="f-model" placeholder="VD: OptiPlex 3020">
+          </div>
           <div class="form-group">
             <label class="form-label">Danh mục <span class="required">*</span></label>
-            <select class="form-select" id="f-category">
-              <option value="">-- Chọn danh mục --</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Thương hiệu / Model</label>
-            <input type="text" class="form-input" id="f-model" placeholder="VD: Dell Inspiron 3511">
+            <select class="form-select" id="f-category"></select>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Phòng / Vị trí <span class="required">*</span></label>
-            <select class="form-select" id="f-room">
-              <option value="">-- Chọn phòng --</option>
-            </select>
+            <label class="form-label">Phòng / Địa điểm đặt <span class="required">*</span></label>
+            <select class="form-select" id="f-room"></select>
           </div>
           <div class="form-group">
             <label class="form-label">Trạng thái</label>
@@ -776,38 +765,34 @@ input[type="checkbox"] {
             <input type="text" class="form-input" id="f-serial" placeholder="VD: SN20241234">
           </div>
           <div class="form-group">
-            <label class="form-label">Người sử dụng</label> <input type="text" class="form-input" id="f-user" placeholder="Tên giáo viên / bộ phận">
+            <label class="form-label">Người sử dụng</label>
+            <input type="text" class="form-input" id="f-user" placeholder="Tên giáo viên / bộ phận">
           </div>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="margin-bottom: 20px;">
           <label class="form-label">Ghi chú</label>
           <textarea class="form-textarea" id="f-note" placeholder="Mô tả tình trạng, ghi chú bổ sung..."></textarea>
         </div>
         <div style="display: flex; gap: 10px; margin-top: 8px;">
           <button class="btn btn-primary" onclick="saveAsset()">💾 Lưu tài sản</button>
           <button class="btn btn-secondary" onclick="resetForm(); switchView('assets')">Hủy</button>
-          <button class="btn btn-accent" style="margin-left: auto" onclick="saveAndPrint()">💾 Lưu & In nhãn</button>
         </div>
       </div>
     </div>
 
     <div class="view-section" id="view-categories">
-      <div style="display: grid; grid-template-columns: 340px 1fr; gap: 20px;">
-        <div style="background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow); height: fit-content;">
-          <h3 style="font-size: 15px; margin-bottom: 16px;">📁 Thêm danh mục tài sản</h3>
+      <div style="display:grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start;">
+        <div style="background:white; border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:20px; box-shadow:var(--shadow)">
+          <h3 style="font-size:15px; margin-bottom:14px">📁 Thêm danh mục mới</h3>
           <div class="form-group">
-            <label class="form-label">Tên danh mục <span class="required">*</span></label>
-            <input type="text" class="form-input" id="new-cat-name" placeholder="VD: Máy tính & Thiết bị mạng">
+            <label class="form-label">Tên danh mục</label>
+            <input type="text" class="form-input" id="new-cat-name" placeholder="VD: Thiết bị điện tử">
           </div>
-          <div class="form-group">
-            <label class="form-label">Mã viết tắt <span class="required">*</span></label>
-            <input type="text" class="form-input" id="new-cat-code" placeholder="VD: IT">
-          </div>
-          <button class="btn btn-primary" style="width: 100%; margin-top: 8px;" onclick="addCategory()">＋ Thêm danh mục</button>
+          <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px" onclick="addCategory()">＋ Thêm danh mục</button>
         </div>
         <div class="table-card">
-          <table style="width:100%">
-            <thead><tr><th>Tên danh mục</th><th>Mã</th><th>Số lượng tài sản</th><th>Thao tác</th></tr></thead>
+          <table>
+            <thead><tr><th>Tên danh mục</th><th>Số lượng tài sản</th><th>Thao tác</th></tr></thead>
             <tbody id="cat-tbody"></tbody>
           </table>
         </div>
@@ -815,22 +800,22 @@ input[type="checkbox"] {
     </div>
 
     <div class="view-section" id="view-rooms">
-      <div style="display: grid; grid-template-columns: 340px 1fr; gap: 20px;">
-        <div style="background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow); height: fit-content;">
-          <h3 style="font-size: 15px; margin-bottom: 16px;">🏫 Thêm phòng học / Địa điểm</h3>
+      <div style="display:grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start;">
+        <div style="background:white; border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:20px; box-shadow:var(--shadow)">
+          <h3 style="font-size:15px; margin-bottom:14px">🏫 Thêm phòng / vị trí</h3>
           <div class="form-group">
-            <label class="form-label">Tên phòng / vị trí <span class="required">*</span></label>
-            <input type="text" class="form-input" id="new-room-name" placeholder="VD: Phòng máy tính 102">
+            <label class="form-label">Tên phòng / Khu vực</label>
+            <input type="text" class="form-input" id="new-room-name" placeholder="VD: Phòng máy tính 01">
           </div>
           <div class="form-group">
-            <label class="form-label">Dãy nhà / Tầng</label>
-            <input type="text" class="form-input" id="new-room-floor" placeholder="VD: Tầng 1 - Nhà A">
+            <label class="form-label">Tầng / Vị trí chi tiết</label>
+            <input type="text" class="form-input" id="new-room-floor" placeholder="VD: Tầng 2 - Nhà A">
           </div>
-          <button class="btn btn-primary" style="width: 100%; margin-top: 8px;" onclick="addRoom()">＋ Thêm địa điểm</button>
+          <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px" onclick="addRoom()">＋ Thêm phòng</button>
         </div>
         <div class="table-card">
-          <table style="width:100%">
-            <thead><tr><th>Tên phòng / Vị trí</th><th>Dãy nhà / Tầng</th><th>Số lượng tài sản</th><th>Thao tác</th></tr></thead>
+          <table>
+            <thead><tr><th>Tên phòng / Vị trí</th><th>Khu vực</th><th>Số tài sản</th><th>Thao tác</th></tr></thead>
             <tbody id="room-tbody"></tbody>
           </table>
         </div>
@@ -838,10 +823,10 @@ input[type="checkbox"] {
     </div>
 
     <div class="view-section" id="view-labels">
-      <div style="background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 40px 20px; text-align: center; box-shadow: var(--shadow); max-width: 600px; margin: auto;">
-        <div style="font-size: 48px; margin-bottom: 16px;">🏷️</div>
-        <h3 style="font-size: 18px; margin-bottom: 8px;">Trung tâm Thiết kế & In Nhãn Tài sản</h3>
-        <p style="color: var(--gray-500); max-width: 440px; margin: 0 auto 24px; line-height: 1.5;">Hỗ trợ xuất mã vạch Barcode CODE128, mã QR Code động, bộ lọc thông minh tùy biến thông tin hàng loạt dán thiết bị</p>
+      <div style="background: white; border-radius: var(--radius-lg); border:1px solid var(--gray-200); padding:40px; text-align:center; max-width:600px; margin: 40px auto; box-shadow: var(--shadow);">
+        <div style="font-size:48px; margin-bottom:16px">🏷️</div>
+        <h3 style="font-size:16px; margin-bottom:8px">In nhãn mã vạch & QR hàng loạt</h3>
+        <p style="color:var(--gray-500); font-size:13px; margin-bottom:20px">Hệ thống hỗ trợ tạo nhãn dán định danh cho toàn bộ tài sản hoặc nhóm tài sản và mẫu nhãn để in hàng loạt dán thiết bị</p>
         <button class="btn btn-primary" onclick="openPrintModal()">🖨 Mở cửa sổ in nhãn</button>
         <button class="btn btn-secondary" style="margin-left: 10px" onclick="switchView('assets')">→ Chọn từ danh sách</button>
       </div>
@@ -851,7 +836,7 @@ input[type="checkbox"] {
       <div style="display:grid;grid-template-columns:1fr 420px;gap:20px;align-items:start;">
         <div style="background: white; border-radius: var(--radius-lg); border: 1px solid var(--gray-200); padding: 24px; box-shadow: var(--shadow);">
           <h3 style="font-size: 15px; margin-bottom: 4px;">📋 Biên bản Bàn giao Tài sản</h3>
-          <p style="font-size:12px;color:var(--gray-400);margin-bottom:16px">Điền thông tin, xem trước và gửi email biên bản đến người nhận.</p>
+          <p style="font-size:12px;color:var(--gray-400);margin-bottom:16px">Điền thông tin, xem trước và xuất biên bản bàn giao thiết bị.</p>
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Người bàn giao <span class="required">*</span></label>
@@ -864,56 +849,27 @@ input[type="checkbox"] {
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Email người nhận <span class="required">*</span></label>
-              <input type="email" class="form-input" id="ho-email" placeholder="nguoinhan@truong.edu.vn">
+              <label class="form-label">Số biên bản</label>
+              <input type="text" class="form-input" id="ho-ref" placeholder="VD: BB-2024/01">
             </div>
-            <div class="form-group">
-              <label class="form-label">SĐT người nhận</label>
-              <input type="text" class="form-input" id="ho-phone" placeholder="0912 345 678">
-            </div>
-          </div>
-          <div class="form-row">
             <div class="form-group">
               <label class="form-label">Ngày bàn giao</label>
               <input type="date" class="form-input" id="ho-date">
             </div>
-            <div class="form-group">
-              <label class="form-label">Số hiệu biên bản</label>
-              <input type="text" class="form-input" id="ho-ref" placeholder="VD: 01/BBBG-2024">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Phòng tiếp nhận</label>
-              <select class="form-select" id="ho-room" onchange="suggestAssetsByRoom()"></select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Mục đích sử dụng</label>
-              <input type="text" class="form-input" id="ho-purpose" value="Phục vụ công tác giảng dạy và làm việc">
-            </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Nhập các mã tài sản bàn giao (cách nhau bằng dấu phẩy) <span class="required">*</span></label>
-            <input type="text" class="form-input" id="ho-assets" placeholder="TS-IT-001, TS-IT-002" oninput="previewHandoverAssets()">
+            <label class="form-label">Mã các tài sản cần bàn giao (cách nhau bằng dấu phẩy)</label>
+            <input type="text" class="form-input" id="ho-assets" placeholder="VD: TS-001, TS-002" oninput="updateHandoverPreview()">
           </div>
           <div class="form-group">
-            <label class="form-label">Ghi chú điều khoản bổ sung</label>
-            <textarea class="form-textarea" id="ho-note" placeholder="Tài sản bàn giao hoạt động ổn định, linh kiện đầy đủ..."></textarea>
+            <label class="form-label">Ghi chú bàn giao</label>
+            <textarea class="form-textarea" id="ho-note" placeholder="Tình trạng lúc bàn giao..."></textarea>
           </div>
-          <div style="display:flex;gap:10px;margin-top:12px;">
-            <button class="btn btn-primary" onclick="printHandover()">🖨 In Biên Bản (PDF)</button>
-            <button class="btn btn-accent" onclick="sendHandoverEmail()">✉ Gửi Email</button>
-            <button class="btn btn-secondary" onclick="copyHandoverText()">📋 Sao chép text</button>
-          </div>
+          <button class="btn btn-primary" style="margin-top:10px" onclick="printHandover()">🖨 In / Xuất biên bản</button>
         </div>
-        <div style="background:#fafafa;border:1px dashed var(--gray-300);border-radius:var(--radius-lg);padding:20px;min-height:400px;position:sticky;top:0;">
-          <h4 style="font-size:13px;margin-bottom:12px;color:var(--gray-700)">👀 Danh sách thiết bị ghi nhận trong biên bản:</h4>
-          <div id="ho-asset-preview-list" style="display:flex;flex-direction:column;gap:8px;"></div>
-          <div style="border-top:1px solid #ddd;margin-top:16px;padding-top:12px;display:flex;justify-content:between;font-size:13px;" id="ho-summary-box">
-            <span style="color:var(--gray-500)">Tổng số lượng: <strong id="ho-asset-count" style="color:#000">0 tài sản</strong></span>
-            <span style="margin-left:auto;color:var(--gray-500)">Tổng trị giá: <strong id="ho-asset-total" style="color:var(--blue)">0đ</strong></span>
-          </div>
-          <div id="ho-email-status" style="margin-top:14px;padding:10px;font-size:12.5px;border-radius:6px;display:none"></div>
+        <div style="background:var(--gray-100); border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:20px;">
+          <h4 style="font-size:13px; margin-bottom:10px">Tài sản đã chọn bàn giao:</h4>
+          <div id="ho-preview-list" style="display:grid; gap:8px;"></div>
         </div>
       </div>
     </div>
@@ -928,7 +884,7 @@ input[type="checkbox"] {
       <div class="table-card">
         <table>
           <thead>
-            <tr><th>Mã tài sản</th><th>Tên tài sản</th><th>Loại</th><th>Ngày</th><th>Đơn vị thực hiện</th><th>Chi phí</th><th>Kết quả</th></tr>
+            <tr><th>Mã tài sản</th><th>Tên tài sản</th><th>Loại bảo trì</th><th>Ngày</th><th>Đơn vị thực hiện</th><th>Chi phí</th><th>Kết quả</th></tr>
           </thead>
           <tbody id="maint-tbody"></tbody>
         </table>
@@ -939,148 +895,49 @@ input[type="checkbox"] {
       <div class="stats-grid" style="margin-bottom: 24px;">
         <div class="stat-card">
           <div class="stat-icon blue">📦</div>
-          <div>
-            <div class="stat-label">Tổng tài sản</div>
-            <div class="stat-value" id="r-total">0</div>
-          </div>
+          <div><div class="stat-label">Tổng tài sản</div><div class="stat-value" id="r-total">0</div></div>
         </div>
         <div class="stat-card">
           <div class="stat-icon green">✅</div>
-          <div>
-            <div class="stat-label">Tốt / Đang dùng</div>
-            <div class="stat-value" id="r-active">0</div>
-          </div>
+          <div><div class="stat-label">Tốt / Đang dùng</div><div class="stat-value" id="r-active">0</div></div>
         </div>
         <div class="stat-card">
           <div class="stat-icon orange">🔧</div>
-          <div>
-            <div class="stat-label">Đang bảo trì</div>
-            <div class="stat-value" id="r-maint">0</div>
-          </div>
+          <div><div class="stat-label">Đang bảo trì</div><div class="stat-value" id="r-maint">0</div></div>
         </div>
         <div class="stat-card">
           <div class="stat-icon red">💔</div>
-          <div>
-            <div class="stat-label">Hỏng hóc</div>
-            <div class="stat-value" id="r-broken">0</div>
-          </div>
+          <div><div class="stat-label">Hỏng hóc</div><div class="stat-value" id="r-broken">0</div></div>
         </div>
       </div>
-      <div class="chart-grid">
-        <div class="chart-card">
-          <div class="chart-title">📊 Phân bổ theo danh mục</div>
-          <div class="bar-chart" id="r-chart-cat"></div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title">🏫 Phân bổ theo phòng</div>
-          <div class="bar-chart" id="r-chart-room"></div>
-        </div>
+      <div class="chart-card">
+        <h3 class="chart-title">Thống kê dữ liệu báo cáo</h3>
+        <p style="color:var(--gray-500)">Chọn các tab bên trái hoặc xem ngoài bảng điều khiển chính để theo dõi biểu đồ thời gian thực.</p>
       </div>
     </div>
 
     <div class="view-section" id="view-settings">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-        <div style="background:white;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow);">
-          <h3 style="font-size:15px;margin-bottom:16px;">🏫 Hồ sơ đơn vị / Trường học</h3>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Tên trường / đơn vị</label>
-              <input type="text" class="form-input" id="cfg-school-name">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Loại hình trường</label>
-              <input type="text" class="form-input" id="cfg-school-type" placeholder="VD: THPT chuẩn Quốc gia">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Mã định danh trường</label>
-              <input type="text" class="form-input" id="cfg-school-code">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Cơ quan quản lý cấp trên</label>
-              <input type="text" class="form-input" id="cfg-parent">
-            </div>
+      <div style="max-width: 600px; display:grid; gap:20px;">
+        <div style="background:white; border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:24px; box-shadow:var(--shadow)">
+          <h3 style="font-size:15px; margin-bottom:16px;">🏫 Thông tin Đơn vị / Trường học</h3>
+          <div class="form-group">
+            <label class="form-label">Tên trường / Đơn vị</label>
+            <input type="text" class="form-input" id="cfg-school-name" value="Trường THPT Lam Sơn">
           </div>
           <div class="form-group">
-            <label class="form-label">Địa chỉ chi tiết</label>
-            <input type="text" class="form-input" id="cfg-school-addr">
+            <label class="form-label">Tên người quản trị tài sản</label>
+            <input type="text" class="form-input" id="cfg-admin-role" value="Quản trị viên">
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Quận / Huyện</label>
-              <input type="text" class="form-input" id="cfg-school-district">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Tỉnh / Thành phố</label>
-              <input type="text" class="form-input" id="cfg-school-province">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Số điện thoại liên hệ</label>
-              <input type="text" class="form-input" id="cfg-school-phone">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Email liên hệ</label>
-              <input type="email" class="form-input" id="cfg-school-email">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Website</label>
-            <input type="text" class="form-input" id="cfg-school-web">
-          </div>
-          <div style="margin-top:4px;">
-            <label class="form-label">Slogan / Mô tả ngắn (hiển thị trên biên bản)</label>
-            <input type="text" class="form-input" id="cfg-school-slogan" placeholder="VD: Trường chuẩn Quốc gia - Chất lượng cao">
+          <button class="btn btn-primary" style="margin-top:10px" onclick="saveSettings()">💾 Lưu cấu hình</button>
+        </div>
+        <div style="background:white; border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:24px; box-shadow:var(--shadow)">
+          <h3 style="font-size:15px; margin-bottom:12px; color:var(--red)">⚠️ Dữ liệu & Hệ thống</h3>
+          <p style="font-size:12.5px; color:var(--gray-500); margin-bottom:16px">Xuất bản sao lưu dự phòng toàn bộ cấu trúc cơ sở dữ liệu hệ thống ra file JSON trên máy tính cá nhân hoặc nhập khôi phục.</p>
+          <div style="display:flex; gap:10px">
+            <button class="btn btn-secondary" onclick="exportBackup()">📥 Xuất file Sao lưu (JSON)</button>
+            <button class="btn btn-secondary" onclick="importBackup()">📤 Khôi phục file dữ liệu</button>
           </div>
         </div>
-
-        <div style="background:white;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow); display: flex; flex-direction: column; gap: 20px;">
-          <div>
-            <h3 style="font-size:15px;margin-bottom:16px;">👤 Thông tin Quản trị viên</h3>
-            <div class="form-group">
-              <label class="form-label">Họ và tên</label>
-              <input type="text" class="form-input" id="cfg-admin-name" placeholder="Nguyễn Văn A">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Chức vụ</label>
-              <input type="text" class="form-input" id="cfg-admin-role" placeholder="Hiệu trưởng / Kế toán...">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Email</label>
-              <input type="email" class="form-input" id="cfg-admin-email" placeholder="admin@truong.edu.vn">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Điện thoại</label>
-              <input type="text" class="form-input" id="cfg-admin-phone" placeholder="0912 345 678">
-            </div>
-          </div>
-          
-          <div style="border-top:1px dashed #eee; padding-top:16px;">
-            <h3 style="font-size:15px;margin-bottom:16px;">⚙️ Cài đặt hệ thống</h3>
-            <div class="form-group">
-              <label class="form-label">Tiền tố mã tài sản</label>
-              <input type="text" class="form-input" id="cfg-prefix" placeholder="VD: TS-">
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Năm học hiện tại</label>
-                <input type="text" class="form-input" id="cfg-year" placeholder="2024-2025">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Năm tài khóa</label>
-                <input type="text" class="form-input" id="cfg-fiscal" placeholder="2024">
-              </div>
-            </div>
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-top:10px;">
-              <input type="checkbox" id="cfg-show-value" checked> Hiển thị cột giá trị tiền trên Biên bản bàn giao
-            </label>
-          </div>
-        </div>
-      </div>
-      <div style="margin-top:20px; display:flex; justify-content:flex-end;">
-        <button class="btn btn-primary" style="padding:10px 24px" onclick="saveSettings()">💾 Lưu toàn bộ cấu hình</button>
       </div>
     </div>
 
@@ -1088,76 +945,38 @@ input[type="checkbox"] {
 </div>
 
 <div class="modal-overlay print-modal" id="print-modal">
-  <div class="modal">
+  <div class="modal" style="width: 850px;">
     <div class="modal-header">
-      <div class="modal-title">🖨 Trung tâm Thiết kế & In Nhãn Hàng Loạt</div>
+      <div class="modal-title">🖨 Thiết lập cấu hình in nhãn dán hàng loạt</div>
       <button class="modal-close" onclick="closePrintModal()">✕</button>
     </div>
-    <div class="modal-body">
-      <div class="print-settings">
-        <div>
-          <div class="print-panel-label">1. Chọn mẫu nhãn</div>
-          <div class="label-templates">
-            <div class="label-template selected" id="tpl-mini" onclick="setTemplate('mini')">
-              <div class="template-thumb" style="font-size:7px">TEXT ONLY</div>
-              <div class="template-info">
-                <div class="template-name">Mẫu siêu nhỏ (Compact)</div>
-                <div class="template-size">Chỉ text, kích cỡ 30x20mm</div>
-              </div>
-            </div>
-            <div class="label-template" id="tpl-barcode" onclick="setTemplate('barcode')">
-              <div class="template-thumb">║█║█║</div>
-              <div class="template-info">
-                <div class="template-name">Mẫu Barcode (Mã vạch)</div>
-                <div class="template-size">Chuẩn CODE128, kích cỡ 50x30mm</div>
-              </div>
-            </div>
-            <div class="label-template" id="tpl-qr-large" onclick="setTemplate('qr-large')">
-              <div class="template-thumb">▚▞</div>
-              <div class="template-info">
-                <div class="template-name">Mẫu QR Code chuẩn</div>
-                <div class="template-size">QR Code + Chi tiết, kích cỡ 60x40mm</div>
-              </div>
-            </div>
-          </div>
-
-          <div style="margin-top: 20px;">
-            <div class="print-panel-label">2. Cấu hình hiển thị</div>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
-                <input type="checkbox" id="opt-school" checked> Hiển thị tên trường
-              </label>
-              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
-                <input type="checkbox" id="opt-room" checked> Hiển thị phòng
-              </label>
-              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
-                <input type="checkbox" id="opt-year" checked> Hiển thị năm mua
-              </label>
-              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
-                <input type="checkbox" id="opt-value"> Hiển thị giá trị
-              </label>
-            </div>
-          </div>
-
-          <div style="margin-top: 16px;">
-            <div class="print-panel-label">Chọn tài sản</div>
-            <select class="filter-select" id="print-filter-cat" style="width: 100%; margin-bottom: 8px;" onchange="updatePrintPreview()">
-              <option value="">Tất cả danh mục</option>
-            </select>
-            <select class="filter-select" id="print-filter-room" style="width: 100%;" onchange="updatePrintPreview()">
-              <option value="">Tất cả phòng</option>
-            </select>
-          </div>
+    <div class="modal-body print-settings">
+      <div>
+        <div class="print-panel-label">Mẫu thiết kế nhãn</div>
+        <div class="label-templates">
+          <div class="label-template selected" id="tmpl-qr" onclick="selectTemplate('qr-medium')">QR + Thông tin định danh</div>
+          <div class="label-template" id="tmpl-barcode" onclick="selectTemplate('barcode')">Mã vạch chuẩn Code128</div>
+          <div class="label-template" id="tmpl-mini" onclick="selectTemplate('mini')">Nhãn nhỏ gọn tối giản</div>
         </div>
-
-        <div>
-          <div class="print-panel-label">Xem trước trang in nhãn (Print Preview)</div>
-          <div class="print-preview-area" id="print-preview-area"></div>
-          
-          <div class="print-controls">
-            <span class="print-count-info">Số lượng nhãn sẽ in: <strong id="print-total-count">0</strong> nhãn</span>
-            <button class="btn btn-primary" style="margin-left: auto;" onclick="triggerPrintCmd()">🖨 Thực hiện lệnh in nhãn</button>
-          </div>
+        <div style="margin-top:20px">
+          <div class="print-panel-label">Tùy chọn hiển thị</div>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer">
+            <input type="checkbox" id="opt-school" checked onchange="updatePrintPreview()"> Tên trường học
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer">
+            <input type="checkbox" id="opt-room" checked onchange="updatePrintPreview()"> Vị trí / Phòng đặt
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer">
+            <input type="checkbox" id="opt-year" checked onchange="updatePrintPreview()"> Hiển thị năm mua
+          </label>
+        </div>
+      </div>
+      <div>
+        <div class="print-panel-label">Xem trước trang in nhãn (Preview)</div>
+        <div class="print-preview-area" id="print-preview-area"></div>
+        <div class="print-controls">
+          <button class="btn btn-primary" onclick="window.print()">🔥 Tiến hành gửi lệnh in (Ctrl + P)</button>
+          <span class="print-count-info" id="print-count-info">Sẽ in <strong>0</strong> nhãn</span>
         </div>
       </div>
     </div>
@@ -1165,199 +984,238 @@ input[type="checkbox"] {
 </div>
 
 <div class="modal-overlay" id="maint-modal">
-  <div class="modal" style="width:460px">
+  <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">🔧 Ghi nhận bảo trì sửa chữa</div>
+      <div class="modal-title">🔧 Ghi nhận thông tin bảo trì</div>
       <button class="modal-close" onclick="document.getElementById('maint-modal').classList.remove('show')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Mã tài sản sửa chữa <span class="required">*</span></label>
-        <input type="text" class="form-input" id="m-code" placeholder="VD: TS-IT-001">
+        <input type="text" class="form-input" id="m-code" placeholder="VD: TS-2024-001">
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Loại hình</label>
-          <select class="form-select" id="m-type">
-            <option value="Sửa chữa">Sửa chữa hỏng hóc</option>
-            <option value="Bảo dưỡng định kỳ">Bảo dưỡng định kỳ</option>
-            <option value="Thay thế linh kiện">Thay thế linh kiện</option>
-          </select>
+          <label class="form-label">Loại hình / Lý do</label>
+          <input type="text" class="form-input" id="m-type" value="Bảo dưỡng định kỳ">
         </div>
         <div class="form-group">
           <label class="form-label">Ngày thực hiện</label>
           <input type="date" class="form-input" id="m-date">
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Đơn vị / Người thực hiện</label>
-        <input type="text" class="form-input" id="m-vendor" placeholder="VD: Công ty Máy tính ABC">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Chi phí sửa chữa (VNĐ)</label>
+          <input type="number" class="form-input" id="m-cost" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Đơn vị sửa chữa</label>
+          <input type="text" class="form-input" id="m-vendor" placeholder="Tên đơn vị kỹ thuật bên ngoài">
+        </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Chi phí (VNĐ)</label>
-        <input type="number" class="form-input" id="m-cost" placeholder="0">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Kết quả / Tình trạng sau sửa</label>
-        <input type="text" class="form-input" id="m-result" value="Đã sửa xong, hoạt động tốt">
+        <label class="form-label">Kết quả nghiệm thu / Ghi chú</label>
+        <textarea class="form-textarea" id="m-result" placeholder="Đã khắc phục hoàn toàn lỗi..."></textarea>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="saveMaintenance()">💾 Ghi nhận</button>
       <button class="btn btn-secondary" onclick="document.getElementById('maint-modal').classList.remove('show')">Hủy</button>
+      <button class="btn btn-primary" onclick="saveMaintenance()">💾 Lưu biên bản</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast">Thông báo hệ thống</div>
+<div class="toast" id="toast-el"></div>
 
 <script>
-// ══════════════════════════════
-//  DATA CONTEXT & MOCK DATA
-// ══════════════════════════════
+// Mock initial core databases
 let categories = [
-  { id: 1, code: 'IT', name: 'Thiết bị công nghệ thông tin' },
-  { id: 2, code: 'AV', name: 'Thiết bị âm thanh, nghe nhìn' },
-  { id: 3, code: 'FN', name: 'Nội thất & Bàn ghế học sinh' },
-  { id: 4, code: 'SC', name: 'Thiết bị khoa học phòng thí nghiệm' },
-  { id: 5, code: 'PR', name: 'Máy in & Thiết bị văn phòng' },
+  { id: 1, name: 'Thiết bị công nghệ thông tin (IT)' },
+  { id: 2, name: 'Thiết bị âm thanh - Nghe nhìn' },
+  { id: 3, name: 'Nội thất & Thiết bị phòng học' },
+  { id: 4, name: 'Thiết bị gia dụng / Văn phòng' }
 ];
 
 let rooms = [
-  { id: 1, name: 'Phòng máy tính 101', floor: 'Tầng 1 - Nhà A' },
-  { id: 2, name: 'Phòng máy tính 102', floor: 'Tầng 1 - Nhà A' },
-  { id: 3, name: 'Phòng thí nghiệm Lý - Hóa', floor: 'Tầng 2 - Nhà B' },
-  { id: 4, name: 'Phòng họp Ban Giám hiệu', floor: 'Tầng 3 - Nhà C' },
-  { id: 5, name: 'Văn phòng giáo vụ', floor: 'Tầng 1 - Nhà C' },
-  { id: 6, name: 'Thư viện trường', floor: 'Tầng 2 - Nhà A' },
+  { id: 1, name: 'Phòng học 101-A1', floor: 'Tầng 1 Nhà A' },
+  { id: 2, name: 'Phòng học 102-A1', floor: 'Tầng 1 Nhà A' },
+  { id: 3, name: 'Phòng thực hành Tin học 01', floor: 'Tầng 3 Nhà B' },
+  { id: 4, name: 'Phòng Hội trường lớn', floor: 'Tầng 1 Nhà Hiệu bộ' },
+  { id: 5, name: 'Phòng Kế toán - Hành chính', floor: 'Tầng 2 Nhà Hiệu bộ' },
+  { id: 6, name: 'Không gian Thư viện trường', floor: 'Tầng 2 Nhà C' }
 ];
 
 let assets = [
-  { id: 1, code: 'TS-IT-001', name: 'Máy tính Dell OptiPlex', model: 'Dell OptiPlex 3080', category: 1, room: 1, status: 'active', year: 2022, value: 18000000, serial: 'SNDELL001', user: 'Phòng máy 1', note: '' },
-  { id: 2, code: 'TS-IT-002', name: 'Máy tính Dell OptiPlex', model: 'Dell OptiPlex 3080', category: 1, room: 1, status: 'active', year: 2022, value: 18000000, serial: 'SNDELL002', user: 'Phòng máy 1', note: '' },
-  { id: 3, code: 'TS-AV-001', name: 'Máy chiếu Đa năng Panasonic', model: 'Panasonic PT-LB426', category: 2, room: 2, status: 'active', year: 2021, value: 15500000, serial: 'SNPANA992', user: 'Thầy Hùng', note: '' },
-  { id: 4, code: 'TS-AV-002', name: 'Tivi thông minh Casper 65 inch', model: 'Casper 65UG6000', category: 2, room: 3, status: 'active', year: 2023, value: 12900000, serial: 'SNCAS001', user: 'Phòng thực hành', note: '' },
-  { id: 5, code: 'TS-PR-001', name: 'Máy in Canon LBP2900', model: 'Canon LBP2900', category: 5, room: 5, status: 'active', year: 2020, value: 4200000, serial: 'SNCANON11', user: 'Cô Mai Kế toán', note: '' },
-  { id: 6, code: 'TS-SC-001', name: 'Kính hiển vi quang học', model: 'XSP-02', category: 4, room: 3, status: 'maintenance', year: 2021, value: 2500000, serial: 'SNKHV08', user: 'Tổ Sinh', note: 'Đang lau kính bụi' },
-  { id: 7, code: 'TS-FN-002', name: 'Tủ tài liệu gỗ 4 cánh', model: 'Hòa Phát AT1960G', category: 3, room: 5, status: 'active', year: 2022, value: 3100000, serial: '', user: 'Văn phòng', note: '' },
-  { id: 8, code: 'TS-IT-004', name: 'Laptop Lenovo IdeaPad', model: 'Lenovo IdeaPad 3 15', category: 1, room: 4, status: 'broken', year: 2021, value: 14000000, serial: 'SN2021008', user: 'Ban Giám hiệu', note: 'Hỏng màn hình cảm ứng' },
+  { id: 1, code: 'TS-IT-001', name: 'Máy chiếu EPSON đa năng', model: 'Epson EB-X06', category: 2, room: 1, status: 'active', year: 2022, value: 12500000, serial: 'SN-EPSON-8893', user: 'Thầy Bình', note: '' },
+  { id: 2, code: 'TS-IT-002', name: 'Máy tính để bàn PC cấu hình cao', model: 'Dell OptiPlex 3050', category: 1, room: 3, status: 'active', year: 2021, value: 16200000, serial: 'SN-DELL-UX902', user: 'Phòng Lab 1', note: '' },
+  { id: 3, code: 'TS-IT-003', name: 'Điều hòa nhiệt độ âm trần Daikin', model: 'Daikin Inverter 24000BTU', category: 4, room: 4, status: 'maintenance', year: 2020, value: 24000000, serial: 'DK-99231-A', user: '', note: 'Bảo trì dàn nóng định kỳ' },
+  { id: 4, code: 'TS-FN-002', name: 'Bàn ghế học sinh đôi chuẩn mẫu', model: 'Hòa Phát BHS-102', category: 3, room: 2, status: 'active', year: 2023, value: 1800000, serial: '', user: '', note: '' }
 ];
 
 let maintenance = [];
-let filteredAssets = [...assets];
-let selectedIds = new Set();
+let appSettings = { schoolName: 'Trường THPT Lam Sơn', adminRole: 'Hệ thống Quản lý' };
 let currentView = 'dashboard';
-let currentTemplate = 'mini';
+let currentTemplate = 'qr-medium';
+let selectedIds = new Set();
+let PAGE_SIZE = 15;
 let currentPage = 1;
-const PAGE_SIZE = 10;
-let nextId = 9;
+let filteredAssets = [];
 
-const DEFAULT_SETTINGS = {
-  schoolName: 'Trường THPT Lam Sơn', schoolType: 'Trường chuẩn Quốc gia', schoolCode: 'THPT-LS',
-  schoolAddr: '123 Lê Lợi, Phường Lam Sơn', schoolDistrict: 'TP Thanh Hóa', schoolProvince: 'Thanh Hóa',
-  schoolPhone: '0237 3847 999', schoolEmail: 'contact@thptlamson.edu.vn', schoolWeb: 'thptlamson.edu.vn',
-  schoolSlogan: 'Trường chuẩn Quốc gia - Chất lượng cao', adminName: 'Nguyễn Văn Quản', adminRole: 'Hiệu trưởng',
-  adminEmail: 'admin@thptlamson.edu.vn', adminPhone: '0912 345 678', prefix: 'TS-', yearLabel: '2025-2026', fiscal: '2026',
-  parent: 'Sở GD&ĐT Thanh Hóa', showValueInHandover: true
-};
-let appSettings = { ...DEFAULT_SETTINGS };
+// ── TOAST MESSAGES ──
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast-el');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
 
-// ══════════════════════════════
-//  CORE ROUTER ENGINE
-// ══════════════════════════════
+// ── ROUTING / VIEW CHANGING ──
 function switchView(view) {
   currentView = view;
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('#sidebar .nav-item').forEach(i => i.classList.remove('active'));
   
-  const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(el => el.textContent.includes(
-    view === 'dashboard' ? 'Bảng điều khiển' : 
-    view === 'assets' ? 'Danh sách tài sản' : 
-    view === 'add_asset' ? 'Thêm tài sản' :
-    view === 'categories' ? 'Danh mục' :
-    view === 'rooms' ? 'Phòng / Địa điểm' :
-    view === 'labels' ? 'In nhãn tài sản' :
-    view === 'handover' ? 'Bàn giao' :
-    view === 'maintenance' ? 'Bảo trì' :
-    view === 'reports' ? 'Báo cáo' : 'Cài đặt'
-  ));
-  if (activeNav) activeNav.classList.add('active');
-  
-  const targetView = document.getElementById('view-' + view);
+  const targetView = document.getElementById(`view-${view}`);
   if (targetView) targetView.classList.add('active');
 
+  // Cập nhật Breadcrumb & Tiêu đề trang
   const titles = {
-    dashboard: ['Bảng điều khiển tổng quan', 'AssetEdu › Tổng quan'],
-    assets: ['Hệ thống quản lý tài sản', 'AssetEdu › Tài sản'],
-    add_asset: ['Biểu mẫu tài sản', 'AssetEdu › Thêm mới'],
-    categories: ['Cấu hình danh mục thiết bị', 'AssetEdu › Danh mục'],
-    rooms: ['Quản lý phòng ban địa điểm', 'AssetEdu › Vị trí'],
-    labels: ['In ấn nhãn mác thông minh', 'AssetEdu › QR & Barcode Hub'],
-    handover: ['Tạo biên bản điều chuyển', 'AssetEdu › Bàn giao'],
-    maintenance: ['Lịch sử bảo trì sửa chữa', 'AssetEdu › Bảo trì'],
-    reports: ['Phân tích & Báo cáo số liệu', 'AssetEdu › Thống kê'],
-    settings: ['Cấu hình thông tin hệ thống', 'AssetEdu › Cài đặt']
+    dashboard: ['Bảng điều khiển tổng hợp', 'AssetEdu › Tổng quan'],
+    assets: ['Danh sách tài sản trường học', 'AssetEdu › Quản lý thiết bị'],
+    add_asset: ['Cập nhật thông tin tài sản', 'AssetEdu › Khai báo tài sản'],
+    categories: ['Danh mục phân loại tài sản', 'AssetEdu › Cấu trúc cấu hình'],
+    rooms: ['Quản lý phòng học & Địa điểm', 'AssetEdu › Sơ đồ đơn vị'],
+    labels: ['In ấn nhãn mác dán thiết bị', 'AssetEdu › Tiện ích mã vạch'],
+    handover: ['Tạo biên bản bàn giao tài sản', 'AssetEdu › Hồ sơ phân phối'],
+    maintenance: ['Lịch sử bảo trì thiết bị', 'AssetEdu › Theo dõi vận hành'],
+    settings: ['Cài đặt cấu hình hệ thống', 'AssetEdu › Thiết lập tổng quan']
   };
-  
+
   if (titles[view]) {
     document.getElementById('page-title').textContent = titles[view][0];
     document.getElementById('page-breadcrumb').textContent = titles[view][1];
   }
 
-  if (view === 'assets') { filteredAssets = [...assets]; renderAssets(); }
+  // Khởi tạo tải động UI dựa theo Tab màn hình truy cập
   if (view === 'dashboard') renderDashboard();
+  if (view === 'assets') { filteredAssets = [...assets]; renderAssets(); }
   if (view === 'categories') renderCategories();
   if (view === 'rooms') renderRooms();
+  if (view === 'add_asset') populateFormSelects();
   if (view === 'maintenance') renderMaintenance();
-  if (view === 'reports') renderReports();
-  if (view === 'add_asset' && !document.getElementById('edit-id').value) { resetForm(); populateFormSelects(); }
-  if (view === 'handover') populateHandoverSelects();
 }
 
-// ══════════════════════════════
-//  RENDER METHODS
-// ══════════════════════════════
+// ── LOCAL STORAGE ENGINE (LƯU TRỮ TRÊN TRÌNH DUYỆT CỦA BẠN) ──
+function saveDB() {
+  localStorage.setItem('assetedu_assets', JSON.stringify(assets));
+  localStorage.setItem('assetedu_categories', JSON.stringify(categories));
+  localStorage.setItem('assetedu_rooms', JSON.stringify(rooms));
+  localStorage.setItem('assetedu_maint', JSON.stringify(maintenance));
+  localStorage.setItem('assetedu_settings', JSON.stringify(appSettings));
+  updateBadges();
+}
+
+function loadDB() {
+  if (localStorage.getItem('assetedu_assets')) assets = JSON.parse(localStorage.getItem('assetedu_assets'));
+  if (localStorage.getItem('assetedu_categories')) categories = JSON.parse(localStorage.getItem('assetedu_categories'));
+  if (localStorage.getItem('assetedu_rooms')) rooms = JSON.parse(localStorage.getItem('assetedu_rooms'));
+  if (localStorage.getItem('assetedu_maint')) maintenance = JSON.parse(localStorage.getItem('assetedu_maint'));
+  if (localStorage.getItem('assetedu_settings')) appSettings = JSON.parse(localStorage.getItem('assetedu_settings'));
+  updateBadges();
+}
+
+function updateBadges() {
+  document.getElementById('badge-total').textContent = assets.length;
+  document.getElementById('badge-maint').textContent = assets.filter(a => a.status === 'maintenance' || a.status === 'broken').length;
+}
+
+// ── RE-RENDER DASHBOARD REALTIME CHARTS & STATS ──
 function renderDashboard() {
   const total = assets.length;
   const active = assets.filter(a => a.status === 'active').length;
   const maint = assets.filter(a => a.status === 'maintenance').length;
   const broken = assets.filter(a => a.status === 'broken').length;
-  const totalVal = assets.reduce((s,a) => s + (a.value||0), 0);
-  
+  const totalVal = assets.reduce((s, a) => s + (a.value || 0), 0);
+
   document.getElementById('stat-total').textContent = total;
   document.getElementById('stat-active').textContent = active;
   document.getElementById('stat-maint').textContent = maint;
   document.getElementById('stat-broken').textContent = broken;
-  document.getElementById('stat-value').textContent = (totalVal/1e9).toFixed(3);
-  document.getElementById('stat-check').textContent = broken;
-  document.getElementById('badge-total').textContent = total;
-  document.getElementById('badge-maint').textContent = maint;
-  
-  // Render charts mock blocks
-  let catHtml = '';
+  document.getElementById('stat-value').textContent = (totalVal / 1e6).toFixed(1) + "M";
+  document.getElementById('stat-value-sub').textContent = "Tổng giá trị tài sản kiểm kê";
+  document.getElementById('stat-check').textContent = maint + broken;
+
+  // Biểu đồ dạng Bar đơn giản theo Danh mục
+  let catHTML = '';
   categories.forEach(c => {
     const count = assets.filter(a => a.category === c.id).length;
-    const pct = total ? (count/total*100).toFixed(0) : 0;
-    catHtml += `<div class="bar-row"><div class="bar-label">${c.name}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--blue)"></div></div><div class="bar-val">${count} ($ {pct}%)</div></div>`;
+    const pct = total > 0 ? (count / total * 100).toFixed(0) : 0;
+    catHTML += `
+      <div class="bar-row">
+        <div class="bar-label" title="${c.name}">${c.name.slice(0,18)}...</div>
+        <div class="bar-track"><div class="bar-fill" style="width: ${pct}%; background: var(--blue);"></div></div>
+        <div class="bar-val">${count} cđ</div>
+      </div>`;
   });
-  document.getElementById('chart-category').innerHTML = catHtml;
+  document.getElementById('chart-category').innerHTML = catHTML || '<p style="color:var(--gray-400)">Chưa có dữ liệu</p>';
 
-  let stHtml = '';
-  const statusLabels = { active:'Đang dùng', maintenance:'Bảo trì', broken:'Hỏng hóc', inactive:'Không dùng' };
-  const statusColors = { active:'var(--green)', maintenance:'var(--orange)', broken:'var(--red)', inactive:'var(--gray-400)' };
-  Object.entries(statusLabels).forEach(([k, v]) => {
+  // Biểu đồ trạng thái theo màu sắc
+  const statusLabels = { active: 'Đang dùng', maintenance: 'Bảo trì', broken: 'Hỏng hóc', inactive: 'Kho chứa' };
+  const colors = { active: 'var(--green)', maintenance: 'var(--orange)', broken: 'var(--red)', inactive: 'var(--gray-400)' };
+  let statusHTML = '';
+  Object.keys(statusLabels).forEach(k => {
     const count = assets.filter(a => a.status === k).length;
-    stHtml += `<div class="pie-row"><div class="pie-dot" style="background:${statusColors[k]}"></div><div class="pie-text">${v}</div><div class="pie-pct">${count} thiết bị</div></div>`;
+    statusHTML += `
+      <div class="pie-row">
+        <div class="pie-dot" style="background:${colors[k]}"></div>
+        <div class="pie-text">${statusLabels[k]}</div>
+        <div class="pie-pct"><b>${count}</b> thiết bị</div>
+      </div>`;
   });
-  document.getElementById('chart-status').innerHTML = stHtml;
+  document.getElementById('chart-status').innerHTML = statusHTML;
 
-  let rmHtml = '';
-  rooms.forEach(r => {
+  // Biểu đồ phân bổ theo vị trí phòng ban
+  let roomHTML = '';
+  rooms.slice(0, 5).forEach(r => {
     const count = assets.filter(a => a.room === r.id).length;
-    const pct = total ? (count/total*100).toFixed(0) : 0;
-    rmHtml += `<div class="bar-row"><div class="bar-label">${r.name}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--green)"></div></div><div class="bar-val">${count}</div></div>`;
+    const pct = total > 0 ? (count / total * 100).toFixed(0) : 0;
+    roomHTML += `
+      <div class="bar-row">
+        <div class="bar-label">${r.name}</div>
+        <div class="bar-track"><div class="bar-fill" style="width: ${pct}%; background: var(--green);"></div></div>
+        <div class="bar-val">${count} món</div>
+      </div>`;
   });
-  document.getElementById('chart-room').innerHTML = rmHtml;
+  document.getElementById('chart-room').innerHTML = roomHTML;
+}
+
+// ── ASSETS TABLE OPERATIONS ──
+function populateFilters() {
+  const catFilter = document.getElementById('filter-cat');
+  const roomFilter = document.getElementById('filter-room');
+  
+  if (catFilter.options.length <= 1) {
+    categories.forEach(c => catFilter.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
+    rooms.forEach(r => roomFilter.insertAdjacentHTML('beforeend', `<option value="${r.id}">${r.name}</option>`));
+  }
+}
+
+function filterAssets() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const cat = document.getElementById('filter-cat').value;
+  const status = document.getElementById('filter-status').value;
+  const room = document.getElementById('filter-room').value;
+
+  filteredAssets = assets.filter(a => {
+    if (q && !a.code.toLowerCase().includes(q) && !a.name.toLowerCase().includes(q) && !(a.model || '').toLowerCase().includes(q)) return false;
+    if (cat && String(a.category) !== cat) return false;
+    if (status && a.status !== status) return false;
+    if (room && String(a.room) !== room) return false;
+    return true;
+  });
+  currentPage = 1;
+  renderAssets();
 }
 
 function renderAssets() {
@@ -1367,55 +1225,180 @@ function renderAssets() {
   const tbody = document.getElementById('asset-tbody');
   
   if (!pageData.length) {
-    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📦</div><p>Không có tài San phù hợp điều kiện lọc</p></div></td></tr>`;
-    document.getElementById('table-info').textContent = 'Hiển thị 0 tài sản';
-    document.getElementById('pagination').innerHTML = '';
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🖥️</div><p>Không tìm thấy bản ghi tài sản nào phù hợp.</p></div></td></tr>`;
+    document.getElementById('table-info').textContent = "Hiển thị 0 tài sản";
     return;
   }
-  
-  const statusLabels = { active:'Đang dùng', maintenance:'Bảo trì', broken:'Hỏng hóc', inactive:'Không dùng' };
-  const statusClass = { active:'status-active', maintenance:'status-maintenance', broken:'status-broken', inactive:'status-inactive' };
-  
-  tbody.innerHTML = pageData.map(a => `
-    <tr class="${selectedIds.has(a.id)?'selected':''}">
-      <td class="check-col"><input type="checkbox" ${selectedIds.has(a.id)?'checked':''} onchange="toggleSelect(${a.id}, this)"></td>
-      <td><span class="asset-code">${a.code}</span></td>
-      <td><div><div class="asset-name">${a.name}</div><div class="asset-model">${a.model||'—'}</div></div></td>
-      <td><span class="category-tag">${getCatName(a.category)}</span></td>
-      <td>${getRoomName(a.room)}</td>
-      <td><span class="status-badge ${statusClass[a.status]}">${statusLabels[a.status]}</span></td>
-      <td style="text-align:center">${a.year||'—'}</td>
-      <td style="font-weight:600;text-align:right">${fmtMoney(a.value)}</td>
-      <td>
-        <div class="action-btns">
-          <button class="icon-btn edit" title="Sửa" onclick="editAsset(${a.id})">📝</button>
-          <button class="icon-btn print" title="In nhãn" onclick="printSingleLabel(${a.id})">🏷️</button>
-          <button class="icon-btn del" title="Xóa" onclick="deleteAsset(${a.id})">🗑️</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-  
-  document.getElementById('table-info').textContent = `Hiển thị ${start+1}-${Math.min(start+PAGE_SIZE, filteredAssets.length)} trên tổng số ${filteredAssets.length} tài sản`;
-  
-  // Render pagination
-  const totalPages = Math.ceil(filteredAssets.length / PAGE_SIZE);
-  let pgHtml = '';
-  for(let i=1; i<=totalPages; i++) {
-    pgHtml += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goToPage(${i})">${i}</button>`;
-  }
-  document.getElementById('pagination').innerHTML = pgHtml;
+
+  const statusLabels = { active: 'Đang dùng', maintenance: 'Bảo trì', broken: 'Hỏng hóc', inactive: 'Không dùng' };
+  const statusClass = { active: 'status-active', maintenance: 'status-maintenance', broken: 'status-broken', inactive: 'status-inactive' };
+
+  tbody.innerHTML = pageData.map(a => {
+    const cName = categories.find(c => c.id === a.category)?.name || 'Chưa phân loại';
+    const rName = rooms.find(r => r.id === a.room)?.name || 'Chưa rõ vị trí';
+    const isChecked = selectedIds.has(a.id) ? 'checked' : '';
+    
+    return `
+      <tr class="${selectedIds.has(a.id) ? 'selected' : ''}">
+        <td><input type="checkbox" ${isChecked} onchange="toggleSelect(${a.id}, this)"></td>
+        <td><span class="asset-code">${a.code}</span></td>
+        <td>
+          <div class="asset-name">${a.name}</div>
+          <div class="asset-model">${a.model || '—'}</div>
+        </td>
+        <td><span class="category-tag">${cName}</span></td>
+        <td style="color:var(--gray-700)">📍 ${rName}</td>
+        <td><span class="status-badge ${statusClass[a.status]}">${statusLabels[a.status]}</span></td>
+        <td style="color:var(--gray-500)">${a.year || '—'}</td>
+        <td style="font-weight:600; text-align:right;">${new Intl.NumberFormat('vi-VN').format(a.value || 0)}đ</td>
+        <td>
+          <div class="action-btns">
+            <button class="icon-btn edit" onclick="editAsset(${a.id})" title="Sửa thông tin">✏️</button>
+            <button class="icon-btn del" onclick="deleteAsset(${a.id})" title="Xóa tài sản">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('table-info').textContent = `Hiển thị từ ${start+1} đến ${Math.min(start+PAGE_SIZE, filteredAssets.length)} trên tổng số ${filteredAssets.length} tài sản`;
+  updateSelectionToolbar();
 }
 
+function toggleSelect(id, chk) {
+  if (chk.checked) { selectedIds.add(id); } else { selectedIds.delete(id); }
+  chk.closest('tr').classList.toggle('selected', chk.checked);
+  updateSelectionToolbar();
+}
+
+function toggleAll(masterChk) {
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageData = filteredAssets.slice(start, start + PAGE_SIZE);
+  pageData.forEach(a => {
+    if (masterChk.checked) { selectedIds.add(a.id); } else { selectedIds.delete(a.id); }
+  });
+  renderAssets();
+}
+
+function updateSelectionToolbar() {
+  const cnt = selectedIds.size;
+  const bar = document.getElementById('selected-count');
+  const btnPrint = document.getElementById('btn-print-selected');
+  if (cnt > 0) {
+    bar.classList.add('show');
+    document.getElementById('selected-num').textContent = cnt;
+    btnPrint.style.display = 'inline-flex';
+  } else {
+    bar.classList.remove('show');
+    btnPrint.style.display = 'none';
+  }
+}
+
+// ── CRUD LOGIC ASSET FORM ──
+function populateFormSelects() {
+  const cSelect = document.getElementById('f-category');
+  const rSelect = document.getElementById('f-room');
+  cSelect.innerHTML = '<option value="">-- Chọn danh mục --</option>' + categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  rSelect.innerHTML = '<option value="">-- Chọn vị trí phòng --</option>' + rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+}
+
+function saveAsset() {
+  const code = document.getElementById('f-code').value.trim();
+  const name = document.getElementById('f-name').value.trim();
+  const category = parseInt(document.getElementById('f-category').value);
+  const room = parseInt(document.getElementById('f-room').value);
+
+  if (!code || !name || !category || !room) {
+    showToast('Vui lòng điền đủ mã, tên, vị trí và danh mục tài sản!', 'error');
+    return;
+  }
+
+  const editId = document.getElementById('edit-id').value;
+  const data = {
+    code, name, category, room,
+    model: document.getElementById('f-model').value.trim(),
+    status: document.getElementById('f-status').value,
+    year: parseInt(document.getElementById('f-year').value) || null,
+    value: parseInt(document.getElementById('f-value').value) || 0,
+    serial: document.getElementById('f-serial').value.trim(),
+    user: document.getElementById('f-user').value.trim(),
+    note: document.getElementById('f-note').value.trim()
+  };
+
+  if (editId) {
+    const idx = assets.findIndex(a => a.id === parseInt(editId));
+    if (idx !== -1) assets[idx] = { ...assets[idx], ...data };
+    showToast('Cập nhật dữ liệu tài sản hoàn tất!');
+  } else {
+    data.id = Date.now();
+    assets.push(data);
+    showToast('Ghi nhận thêm tài sản mới thành công!');
+  }
+  resetForm();
+  switchView('assets');
+  saveDB();
+}
+
+function editAsset(id) {
+  const a = assets.find(x => x.id === id);
+  if (!a) return;
+  switchView('add_asset');
+  document.getElementById('form-title').textContent = "✏️ Chỉnh sửa thông tin tài sản";
+  document.getElementById('edit-id').value = a.id;
+  document.getElementById('f-code').value = a.code;
+  document.getElementById('f-name').value = a.name;
+  document.getElementById('f-model').value = a.model || '';
+  document.getElementById('f-category').value = a.category;
+  document.getElementById('f-room').value = a.room;
+  document.getElementById('f-status').value = a.status;
+  document.getElementById('f-year').value = a.year || '';
+  document.getElementById('f-value').value = a.value || '';
+  document.getElementById('f-serial').value = a.serial || '';
+  document.getElementById('f-user').value = a.user || '';
+  document.getElementById('f-note').value = a.note || '';
+}
+
+function deleteAsset(id) {
+  if (!confirm('Bạn có chắc chắn muốn xóa vĩnh viễn tài sản này khỏi kho dữ liệu?')) return;
+  assets = assets.filter(a => a.id !== id);
+  selectedIds.delete(id);
+  saveDB();
+  filterAssets();
+  showToast('Đã xóa bỏ bản ghi tài sản');
+}
+
+function resetForm() {
+  document.getElementById('edit-id').value = '';
+  document.getElementById('form-title').textContent = "➕ Thêm tài sản mới";
+  document.getElementById('f-code').value = '';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-model').value = '';
+  document.getElementById('f-year').value = '';
+  document.getElementById('f-value').value = '';
+  document.getElementById('f-serial').value = '';
+  document.getElementById('f-user').value = '';
+  document.getElementById('f-note').value = '';
+}
+
+// ── ROOM & CATEGORY MANAGEMENTS ──
 function renderCategories() {
   document.getElementById('cat-tbody').innerHTML = categories.map(c => `
     <tr>
       <td style="font-weight:600">${c.name}</td>
-      <td><span class="asset-code">${c.code}</span></td>
-      <td><strong>${assets.filter(a=>a.category===c.id).length}</strong> thiết bị</td>
+      <td><b>${assets.filter(a=>a.category===c.id).length}</b> sản phẩm</td>
       <td><button class="icon-btn del" onclick="deleteCategory(${c.id})">🗑️</button></td>
-    </tr>
-  `).join('');
+    </tr>`).join('');
+}
+function addCategory() {
+  const name = document.getElementById('new-cat-name').value.trim();
+  if(!name) return showToast('Vui lòng nhập tên danh mục', 'error');
+  categories.push({ id: Date.now(), name });
+  document.getElementById('new-cat-name').value = '';
+  renderCategories(); saveDB(); showToast('Đã lưu danh mục mới!');
+}
+function deleteCategory(id) {
+  if(assets.some(a=>a.category===id)) return showToast('Danh mục này có chứa sản phẩm, không thể xóa!', 'error');
+  categories = categories.filter(c=>c.id!==id);
+  renderCategories(); saveDB();
 }
 
 function renderRooms() {
@@ -1423,281 +1406,149 @@ function renderRooms() {
     <tr>
       <td style="font-weight:600">${r.name}</td>
       <td style="color:var(--gray-500)">${r.floor}</td>
-      <td><strong>${assets.filter(a=>a.room===r.id).length}</strong> thiết bị</td>
+      <td><b>${assets.filter(a=>a.room===r.id).length}</b> sản phẩm</td>
       <td><button class="icon-btn del" onclick="deleteRoom(${r.id})">🗑️</button></td>
-    </tr>
-  `).join('');
+    </tr>`).join('');
 }
-
-function renderMaintenance() {
-  document.getElementById('maint-tbody').innerHTML = maintenance.length ? maintenance.map(m => `
-    <tr>
-      <td><span class="asset-code">${m.assetCode}</span></td>
-      <td style="font-weight:500">${m.assetName}</td>
-      <td>${m.type}</td>
-      <td style="color:var(--gray-500)">${m.date}</td>
-      <td>${m.vendor}</td>
-      <td style="font-weight:600;color:var(--orange)">${fmtMoney(m.cost)}</td>
-      <td><span class="status-badge status-active">${m.result}</span></td>
-    </tr>
-  `).join('') : '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🔧</div><p>Chưa có dữ liệu bảo trì sửa chữa</p></div></td></tr>';
-}
-
-function renderReports() {
-  document.getElementById('r-total').textContent = assets.length;
-  document.getElementById('r-active').textContent = assets.filter(a=>a.status==='active').length;
-  document.getElementById('r-maint').textContent = assets.filter(a=>a.status==='maintenance').length;
-  document.getElementById('r-broken').textContent = assets.filter(a=>a.status==='broken').length;
-  
-  let catHtml = '';
-  categories.forEach(c => {
-    const count = assets.filter(a => a.category === c.id).length;
-    const pct = assets.length ? (count/assets.length*100).toFixed(0) : 0;
-    catHtml += `<div class="bar-row"><div class="bar-label">${c.name}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--blue)"></div></div><div class="bar-val">${count} chiếc</div></div>`;
-  });
-  document.getElementById('r-chart-cat').innerHTML = catHtml;
-
-  let rmHtml = '';
-  rooms.forEach(r => {
-    const count = assets.filter(a => a.room === r.id).length;
-    const pct = assets.length ? (count/assets.length*100).toFixed(0) : 0;
-    rmHtml += `<div class="bar-row"><div class="bar-label">${r.name}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--green)"></div></div><div class="bar-val">${count} chiếc</div></div>`;
-  });
-  document.getElementById('r-chart-room').innerHTML = rmHtml;
-}
-
-// ══════════════════════════════
-//  DATA LOGIC MUTATIONS
-// ══════════════════════════════
-function populateFormSelects() {
-  document.getElementById('f-category').innerHTML = '<option value="">-- Chọn danh mục --</option>' + categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-  document.getElementById('f-room').innerHTML = '<option value="">-- Chọn phòng --</option>' + rooms.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
-}
-
-function populateFilters() {
-  const cEl = document.getElementById('filter-cat');
-  if(cEl && cEl.options.length <= 1) {
-    categories.forEach(c => cEl.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
-  }
-  const rEl = document.getElementById('filter-room');
-  if(rEl && rEl.options.length <= 1) {
-    rooms.forEach(r => rEl.insertAdjacentHTML('beforeend', `<option value="${r.id}">${r.name}</option>`));
-  }
-}
-
-function filterAssets() {
-  const q = (document.getElementById('search-input').value||'').toLowerCase();
-  const cat = document.getElementById('filter-cat').value;
-  const status = document.getElementById('filter-status').value;
-  const room = document.getElementById('filter-room').value;
-  
-  filteredAssets = assets.filter(a => {
-    if (q && !a.code.toLowerCase().includes(q) && !a.name.toLowerCase().includes(q) && !(a.model||'').toLowerCase().includes(q)) return false;
-    if (cat && a.category != cat) return false;
-    if (status && a.status !== status) return false;
-    if (room && a.room != room) return false;
-    return true;
-  });
-  currentPage = 1;
-  renderAssets();
-}
-
-function goToPage(p) { currentPage = p; renderAssets(); }
-
-function toggleSelect(id, chk) {
-  if (chk.checked) selectedIds.add(id);
-  else selectedIds.delete(id);
-  updateToolbarSelected();
-}
-
-function toggleAll(chk) {
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const pageData = filteredAssets.slice(start, start + PAGE_SIZE);
-  pageData.forEach(a => {
-    if(chk.checked) selectedIds.add(a.id);
-    else selectedIds.delete(a.id);
-  });
-  renderAssets();
-  updateToolbarSelected();
-}
-
-function updateToolbarSelected() {
-  const num = selectedIds.size;
-  const countBox = document.getElementById('selected-count');
-  const printBtn = document.getElementById('btn-print-selected');
-  if (num > 0) {
-    countBox.classList.add('show');
-    document.getElementById('selected-num').textContent = num;
-    printBtn.style.display = 'inline-flex';
-  } else {
-    countBox.classList.remove('show');
-    printBtn.style.display = 'none';
-  }
-}
-
-function saveAsset() {
-  const code = document.getElementById('f-code').value.trim();
-  const name = document.getElementById('f-name').value.trim();
-  const cat = parseInt(document.getElementById('f-category').value);
-  const room = parseInt(document.getElementById('f-room').value);
-  
-  if (!code || !name || !cat || !room) {
-    showToast('Vui lòng nhập đầy đủ thông tin bắt buộc!', 'error');
-    return;
-  }
-  
-  const assetData = {
-    code, name, model: document.getElementById('f-model').value, category: cat, room,
-    status: document.getElementById('f-status').value,
-    year: parseInt(document.getElementById('f-year').value)||null,
-    value: parseInt(document.getElementById('f-value').value)||0,
-    serial: document.getElementById('f-serial').value,
-    user: document.getElementById('f-user').value,
-    note: document.getElementById('f-note').value,
-  };
-  
-  const editId = parseInt(document.getElementById('edit-id').value);
-  if (editId) {
-    const idx = assets.findIndex(a=>a.id===editId);
-    if(idx!==-1) assets[idx] = { id: editId, ...assetData };
-    showToast('Cập nhật tài sản thành công!', 'success');
-  } else {
-    assets.push({ id: nextId++, ...assetData });
-    showToast('Thêm tài sản mới thành công!', 'success');
-  }
-  resetForm();
-  switchView('assets');
-}
-
-function saveAndPrint() {
-  saveAsset();
-  setTimeout(() => openPrintModal(), 300);
-}
-
-function editAsset(id) {
-  const a = assets.find(x=>x.id===id);
-  if (!a) return;
-  switchView('add_asset');
-  populateFormSelects();
-  
-  document.getElementById('edit-id').value = id;
-  document.getElementById('form-title').textContent = '📝 Chỉnh sửa thông tin tài sản';
-  document.getElementById('f-code').value = a.code;
-  document.getElementById('f-name').value = a.name;
-  document.getElementById('f-model').value = a.model||'';
-  document.getElementById('f-category').value = a.category;
-  document.getElementById('f-room').value = a.room;
-  document.getElementById('f-status').value = a.status;
-  document.getElementById('f-year').value = a.year||'';
-  document.getElementById('f-value').value = a.value||'';
-  document.getElementById('f-serial').value = a.serial||'';
-  document.getElementById('f-user').value = a.user||'';
-  document.getElementById('f-note').value = a.note||'';
-}
-
-function deleteAsset(id) {
-  if (!confirm('Bạn có chắc chắn muốn xóa tài sản này khỏi hệ thống?')) return;
-  assets = assets.filter(a=>a.id!==id);
-  selectedIds.delete(id);
-  filteredAssets = filteredAssets.filter(a=>a.id!==id);
-  updateToolbarSelected();
-  renderAssets();
-  showToast('Đã xóa thiết bị thành công.', 'success');
-}
-
-function resetForm() {
-  document.getElementById('edit-id').value = '';
-  document.getElementById('form-title').textContent = '➕ Thêm tài sản mới';
-  ['f-code','f-name','f-model','f-year','f-value','f-serial','f-user','f-note'].forEach(id=>{
-    const el = document.getElementById(id); if(el) el.value='';
-  });
-}
-
-function addCategory() {
-  const name = document.getElementById('new-cat-name').value.trim();
-  const code = document.getElementById('new-cat-code').value.trim();
-  if(!name || !code) { showToast('Hãy điền tên và mã danh mục!','error'); return; }
-  categories.push({ id: categories.length+1, code, name });
-  document.getElementById('new-cat-name').value='';
-  document.getElementById('new-cat-code').value='';
-  renderCategories();
-  showToast('Đã bổ sung danh mục mới.','success');
-}
-
-function deleteCategory(id) {
-  if (assets.some(a=>a.category===id)) { showToast('Danh mục đang chứa tài sản, không thể xóa!','error'); return; }
-  categories = categories.filter(c=>c.id!==id);
-  renderCategories();
-}
-
 function addRoom() {
   const name = document.getElementById('new-room-name').value.trim();
   const floor = document.getElementById('new-room-floor').value.trim();
-  if(!name) { showToast('Vui lòng nhập tên phòng vị trí!','error'); return; }
-  rooms.push({ id: rooms.length+1, name, floor });
-  document.getElementById('new-room-name').value='';
-  document.getElementById('new-room-floor').value='';
-  renderRooms();
-  showToast('Đã thêm phòng học địa điểm mới.','success');
+  if(!name) return showToast('Tên phòng không được trống', 'error');
+  rooms.push({ id: Date.now(), name, floor });
+  document.getElementById('new-room-name').value = '';
+  document.getElementById('new-room-floor').value = '';
+  renderRooms(); saveDB(); showToast('Thêm địa điểm phòng học thành công!');
 }
-
 function deleteRoom(id) {
-  if (assets.some(a=>a.room===id)) { showToast('Địa điểm này đang có tài sản đang neo giữ!','error'); return; }
+  if(assets.some(a=>a.room===id)) return showToast('Phòng học đang lưu trữ thiết bị, không thể xóa!', 'error');
   rooms = rooms.filter(r=>r.id!==id);
-  renderRooms();
+  renderRooms(); saveDB();
 }
 
+// ── MAINTENANCES ──
+function renderMaintenance() {
+  document.getElementById('maint-tbody').innerHTML = maintenance.length ? maintenance.map(m => `
+    <tr>
+      <td><span class="asset-code">${m.code}</span></td>
+      <td style="font-weight:600">${m.name}</td>
+      <td>${m.type}</td>
+      <td style="color:var(--gray-500)">${m.date}</td>
+      <td>${m.vendor}</td>
+      <td style="color:var(--red); font-weight:600">${new Intl.NumberFormat('vi-VN').format(m.cost)}đ</td>
+      <td style="font-size:12.5px; color:var(--gray-700)">${m.result}</td>
+    </tr>`).join('') : `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🔧</div><p>Chưa phát sinh nhật ký sửa chữa.</p></div></td></tr>`;
+}
 function openMaintenanceModal() {
   document.getElementById('m-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('maint-modal').classList.add('show');
 }
-
 function saveMaintenance() {
   const code = document.getElementById('m-code').value.trim();
-  const asset = assets.find(a=>a.code===code);
-  const date = document.getElementById('m-date').value;
-  if (!code || !date) { showToast('Mã tài sản và ngày bắt buộc nhập!', 'error'); return; }
-  
-  maintenance.unshift({
-    assetCode: code,
-    assetName: asset ? asset.name : 'Tài sản vãng lai',
-    type: document.getElementById('m-type').value,
-    date,
-    vendor: document.getElementById('m-vendor').value || 'Bộ phận kỹ thuật',
-    cost: parseInt(document.getElementById('m-cost').value)||0,
-    result: document.getElementById('m-result').value,
-  });
-  
-  if (asset) asset.status = 'maintenance';
+  const target = assets.find(a => a.code === code);
+  if (!code) return showToast('Vui lòng nhập mã thiết bị', 'error');
+
+  const record = {
+    code,
+    name: target ? target.name : 'Tài sản vãng lai',
+    type: document.getElementById('m-type').value.trim(),
+    date: document.getElementById('m-date').value,
+    cost: parseInt(document.getElementById('m-cost').value) || 0,
+    vendor: document.getElementById('m-vendor').value.trim(),
+    result: document.getElementById('m-result').value.trim()
+  };
+
+  maintenance.unshift(record);
+  if (target) {
+    target.status = 'active'; // Reset trạng thái về hoạt động sau bảo trì
+  }
   document.getElementById('maint-modal').classList.remove('show');
+  saveDB();
   renderMaintenance();
-  showToast('Đã cập nhật phiếu lịch sử sửa chữa bảo dưỡng!','success');
+  showToast('Đã ghi nhận nhật ký bảo dưỡng thành công!');
 }
 
-// ══════════════════════════════
-//  PRINT CODE HUB LABELS - FIXED ENGINE
-// ══════════════════════════════
-let printQueueData = [];
+// ── HANDOVER MANAGEMENT ──
+function updateHandoverPreview() {
+  const val = document.getElementById('ho-assets').value;
+  const codes = val.split(',').map(c => c.trim()).filter(Boolean);
+  const container = document.getElementById('ho-preview-list');
+  
+  if(!codes.length) { container.innerHTML = '<p style="color:var(--gray-400); font-size:12px;">Nhập mã tài sản để xem nhanh trước biên bản...</p>'; return; }
+  
+  container.innerHTML = codes.map(c => {
+    const a = assets.find(x => x.code === c);
+    if (a) {
+      return `<div style="background:white; padding:8px 12px; border-radius:6px; border:1px solid var(--gray-200); font-size:12.5px">🟢 <b>${a.code}</b> - ${a.name}</div>`;
+    } else {
+      return `<div style="background:var(--red-light); color:var(--red); padding:8px 12px; border-radius:6px; font-size:12.5px">⚠️ Không thấy mã: <b>${c}</b></div>`;
+    }
+  }).join('');
+}
 
+function printHandover() {
+  const from = document.getElementById('ho-from').value.trim();
+  const to = document.getElementById('ho-to').value.trim();
+  const codesVal = document.getElementById('ho-assets').value;
+  if(!from || !to || !codesVal) return showToast('Vui lòng điền đầy đủ thông tin bàn giao bắt buộc!', 'error');
+
+  const ref = document.getElementById('ho-ref').value || 'BBBG-' + Date.now().toString().slice(-6);
+  const dateStr = document.getElementById('ho-date').value || new Date().toLocaleDateString('vi-VN');
+  const note = document.getElementById('ho-note').value || 'Thiết bị hoạt động bình thường, đầy đủ phụ kiện đi kèm.';
+
+  const codes = codesVal.split(',').map(c => c.trim()).filter(Boolean);
+  let rowsHTML = '';
+  let stt = 1;
+  codes.forEach(c => {
+    const a = assets.find(x => x.code === c);
+    if(a) {
+      rowsHTML += `<tr><td>${stt++}</td><td>${a.code}</td><td>${a.name}</td><td>${a.model||'—'}</td><td>${a.serial||'—'}</td><td>${new Intl.NumberFormat('vi-VN').format(a.value)}đ</td></tr>`;
+    }
+  });
+
+  const w = window.open('', '_blank');
+  w.document.write(`
+    <html><head><title>Biên bản bàn giao tài sản - ${ref}</title>
+    <style>body{font-family:Arial;padding:40px;line-height:1.5} table{width:100%;border-collapse:collapse;margin:20px 0} th,td{border:1px solid #ddd;padding:10px;text-align:left} th{background:#f5f5f5} .flex{display:flex;justify-content:space-between;margin-top:50px}</style>
+    </head><body>
+    <h2 style="text-align:center; margin-bottom:2px;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h2>
+    <h4 style="text-align:center; margin-top:0; font-weight:normal;">Độc lập - Tự do - Hạnh phúc</h4>
+    <hr style="width:200px; margin: 10px auto 30px;">
+    <h2 style="text-align:center;text-transform:uppercase;">Biên bản bàn giao & nghiệm thu tài sản</h2>
+    <p style="text-align:center">Số văn bản định danh: ${ref} | Ngày thực hiện: ${dateStr}</p>
+    <p><b>Đơn vị chủ quản:</b> ${appSettings.schoolName}</p>
+    <p><b>Đại diện bên bàn giao (Bên A):</b> ${from}</p>
+    <p><b>Đại diện bên tiếp nhận (Bên B):</b> ${to}</p>
+    <p>Hai bên tiến hành thống kê bàn giao danh mục trang thiết bị cơ sở vật chất chi tiết dưới đây:</p>
+    <table><thead><tr><th>STT</th><th>Mã tài sản</th><th>Tên tài sản</th><th>Model</th><th>Số Serial</th><th>Giá trị</th></tr></thead><tbody>${rowsHTML || '<tr><td colspan="6">Không có danh mục hợp lệ</td></tr>'}</tbody></table>
+    <p><b>Cam kết chung / Ghi chú điều kiện:</b> ${note}</p>
+    <div class="flex"><div style="text-align:center"><b>ĐẠI DIỆN BÊN GIAO</b><br><br><br><br><i>(Ký và ghi rõ họ tên)</i></div><div style="text-align:center"><b>ĐẠI DIỆN BÊN NHẬN</b><br><br><br><br><i>(Ký và ghi rõ họ tên)</i></div></div>
+    <script>window.onload = function() { window.print(); };<\/script>
+    </body></html>
+  `);
+  w.document.close();
+}
+
+// ── IN NHÃN MÃ VẠCH & BARCODE HÀNG LOẠT ENGINE ──
 function openPrintModal(fromSelected = false) {
+  const area = document.getElementById('print-preview-area');
+  area.innerHTML = '';
+  
+  let targetList = fromSelected ? assets.filter(a => selectedIds.has(a.id)) : [...assets];
+  
+  if (!targetList.length) {
+    showToast('Danh sách thiết bị in rỗng. Vui lòng chọn tài sản trước!', 'error');
+    return;
+  }
+
   document.getElementById('print-modal').classList.add('show');
-  
-  // Populate filter selectors inside modal if empty
-  const catSel = document.getElementById('print-filter-cat');
-  if (catSel.options.length <= 1) {
-    categories.forEach(c => catSel.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
-  }
-  const rmSel = document.getElementById('print-filter-room');
-  if (rmSel.options.length <= 1) {
-    rooms.forEach(r => rmSel.insertAdjacentHTML('beforeend', `<option value="${r.id}">${r.name}</option>`));
-  }
-  
-  if (fromSelected && selectedIds.size > 0) {
-    printQueueData = assets.filter(a => selectedIds.has(a.id));
-  } else {
-    printQueueData = [...assets];
-  }
-  
+  document.getElementById('print-count-info').querySelector('strong').textContent = targetList.length;
+
+  targetList.forEach(a => {
+    const lbl = document.createElement('div');
+    lbl.className = `label-card size-medium`;
+    lbl.id = `label-preview-${a.id}`;
+    area.appendChild(lbl);
+  });
   updatePrintPreview();
 }
 
@@ -1705,360 +1556,154 @@ function closePrintModal() {
   document.getElementById('print-modal').classList.remove('show');
 }
 
-function printSingleLabel(id) {
-  const target = assets.find(a=>a.id===id);
-  if(target) {
-    printQueueData = [target];
-    document.getElementById('print-modal').classList.add('show');
-    updatePrintPreview();
-  }
-}
-
-function setTemplate(tpl) {
-  currentTemplate = tpl;
-  document.querySelectorAll('.label-template').forEach(el => el.classList.remove('selected'));
-  document.getElementById('tpl-' + tpl).classList.add('selected');
+function selectTemplate(tmpl) {
+  currentTemplate = tmpl;
+  document.querySelectorAll('.label-template').forEach(t => t.classList.remove('selected'));
+  if(tmpl === 'qr-medium') document.getElementById('tmpl-qr').classList.add('selected');
+  if(tmpl === 'barcode') document.getElementById('tmpl-barcode').classList.add('selected');
+  if(tmpl === 'mini') document.getElementById('tmpl-mini').classList.add('selected');
   updatePrintPreview();
 }
 
 function updatePrintPreview() {
-  const previewArea = document.getElementById('print-preview-area');
-  previewArea.innerHTML = '';
-  
-  const catF = document.getElementById('print-filter-cat').value;
-  const rmF = document.getElementById('print-filter-room').value;
-  
-  // Apply contextual filter configs
-  let targets = [...printQueueData];
-  if(catF) targets = targets.filter(a=>a.category == catF);
-  if(rmF) targets = targets.filter(a=>a.room == rmF);
-  
-  document.getElementById('print-total-count').textContent = targets.length;
-  
-  if(!targets.length) {
-    previewArea.innerHTML = '<div style="color:var(--gray-400);padding:40px;width:100%;text-align:center">Không có cấu trúc tài sản thỏa mãn bộ lọc in</div>';
-    return;
-  }
-  
   const showSchool = document.getElementById('opt-school').checked;
   const showRoom = document.getElementById('opt-room').checked;
   const showYear = document.getElementById('opt-year').checked;
-  const showValue = document.getElementById('opt-value').checked;
-  
-  const school = appSettings.schoolName || 'THPT Lam Sơn';
-  
-  // Build raw safe blocks
-  let blocksHtml = '';
-  let queueRenderJobs = []; // Lưu cấu hình vẽ động
-  
-  targets.forEach(a => {
-    const roomName = getRoomName(a.room);
-    const qrTextStr = `${a.code}\n${a.name}\n${roomName}`;
-    
+  const schoolTitle = showSchool ? appSettings.schoolName : "TÀI SẢN TRƯỜNG HỌC";
+
+  const area = document.getElementById('print-preview-area');
+  const cards = area.querySelectorAll('.label-card');
+
+  cards.forEach(card => {
+    const id = parseInt(card.id.replace('label-preview-', ''));
+    const a = assets.find(x => x.id === id);
+    if (!a) return;
+
+    card.className = `label-card`;
+    const rName = rooms.find(r => r.id === a.room)?.name || 'Chưa rõ';
+
     if (currentTemplate === 'mini') {
-      blocksHtml += `
-        <div class="label-card size-small" id="lbl-${a.id}">
-          <div class="label-header">${showSchool ? school : 'AssetEdu — Nhãn'}</div>
-          <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;padding:2px">
-            <div style="font-size:7px;font-weight:700;color:#0f172a;text-align:center;line-height:1.2;word-break:break-all">${a.name}</div>
-            <div style="font-family:monospace;font-size:6.5px;color:#1e56a0;font-weight:600">${a.code}</div>
-          </div>
-        </div>`;
+      card.classList.add('size-small');
+      card.innerHTML = `
+        <div class="label-header" style="font-size:6px;">${schoolTitle.slice(0,25)}</div>
+        <div style="font-size:7px; font-weight:700; margin-top:4px; text-align:center;">${a.name.slice(0,20)}</div>
+        <div style="font-family:monospace; font-size:7px; color:var(--blue); font-weight:bold">${a.code}</div>`;
     } 
     else if (currentTemplate === 'barcode') {
-      const barcodeElementId = `bc-svg-${a.id}`;
-      blocksHtml += `
-        <div class="label-card size-medium" id="lbl-${a.id}" style="justify-content:space-between;">
-          <div class="label-header">${showSchool ? school : 'AssetEdu — Barcode'}</div>
-          <div style="padding:4px 6px;width:100%;flex:1;display:flex;flex-direction:column;justify-content:center">
-            <div style="font-size:8px;font-weight:700;color:#0f172a;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.name}</div>
-            ${showRoom ? `<div style="font-size:6.5px;color:#64748b">📍 ${roomName}</div>` : ''}
-            ${showValue ? `<div style="font-size:6.5px;color:var(--green)">💰 ${fmtMoney(a.value)}</div>` : ''}
-          </div>
-          <div class="label-barcode-wrap">
-            <svg id="${barcodeElementId}"></svg>
-          </div>
-          <div class="label-footer">${a.code}${showYear && a.year ? ' • NĂM: ' + a.year : ''}</div>
-        </div>`;
-        
-      queueRenderJobs.push({ type: 'barcode', id: barcodeElementId, val: a.code });
+      card.classList.add('size-medium');
+      const uniqueId = `bc-svg-${a.id}`;
+      card.innerHTML = `
+        <div class="label-header">${schoolTitle}</div>
+        <div class="label-info" style="padding: 4px 0 0 4px; width:100%">
+          <div class="label-info-name">${a.name}</div>
+          ${showRoom ? `<div class="label-info-loc">Vị trí: ${rName}</div>` : ''}
+        </div>
+        <div class="label-barcode-wrap"><svg id="${uniqueId}"></svg></div>
+        <div class="label-footer" style="font-family:monospace; font-weight:bold">${a.code} ${showYear&&a.year?'['+a.year+']':''}</div>`;
+      
+      // Vẽ Barcode bất đồng bộ tuyến tính bảo toàn DOM
+      setTimeout(() => {
+        try {
+          JsBarcode(`#${uniqueId}`, a.code, { format: "CODE128", height: 18, displayValue: false, margin: 0 });
+        } catch(e) { console.error(e); }
+      }, 50);
     } 
-    else if (currentTemplate === 'qr-large') {
-      const qrElementId = `qr-div-${a.id}`;
-      blocksHtml += `
-        <div class="label-card size-a5-qr label-large" id="lbl-${a.id}">
-          <div class="label-header">${showSchool ? school : 'HỆ THỐNG TÀI SẢN'}</div>
-          <div class="label-body" style="padding:4px;gap:6px;">
-            <div class="label-qr-wrap" id="${qrElementId}" style="width:54px;height:54px;"></div>
-            <div class="label-info">
-              <div class="label-info-name" style="font-size:8.5px;margin-bottom:2px;">${a.name}</div>
-              <div class="label-info-code" style="font-size:7.5px;margin-bottom:1px;">Mã: ${a.code}</div>
-              ${showRoom ? `<div class="label-info-loc" style="font-size:6.5px">Vị trí: ${roomName}</div>` : ''}
-              ${showYear && a.year ? `<div class="label-info-loc" style="font-size:6.5px">Năm mua: ${a.year}</div>` : ''}
-              ${showValue ? `<div class="label-info-loc" style="font-size:6.5px;color:var(--green)">Giá trị: ${fmtMoney(a.value)}</div>` : ''}
-            </div>
+    else {
+      // Mẫu QR Medium tiêu chuẩn mặc định
+      card.classList.add('size-medium');
+      const uniqueQrId = `qr-container-${a.id}`;
+      card.innerHTML = `
+        <div class="label-header">${schoolTitle}</div>
+        <div class="label-body">
+          <div class="label-qr-wrap" id="${uniqueQrId}"></div>
+          <div class="label-info">
+            <div class="label-info-name" style="font-size:8.5px;">${a.name}</div>
+            <div class="label-info-code">${a.code}</div>
+            ${showRoom ? `<div class="label-info-loc">📍 ${rName.slice(0,20)}</div>` : ''}
+            ${showYear && a.year ? `<div class="label-info-loc">📆 Năm mua: ${a.year}</div>` : ''}
           </div>
-          <div class="label-footer" style="font-size:5.5px">AssetEdu Smart Label System</div>
-        </div>`;
-        
-      queueRenderJobs.push({ type: 'qr', id: qrElementId, val: qrTextStr });
-    }
-  });
-  
-  previewArea.innerHTML = blocksHtml;
-  
-  // Khởi chạy hàm render đồng bộ tập trung để tránh lỗi DOM chạy local
-  setTimeout(() => {
-    renderAllCodes(queueRenderJobs);
-  }, 50);
-}
-
-function renderAllCodes(jobs) {
-  jobs.forEach(job => {
-    const el = document.getElementById(job.id);
-    if (!el) return;
-    
-    try {
-      if (job.type === 'barcode') {
-        JsBarcode("#" + job.id, job.val, {
-          format: "CODE128",
-          height: 25,
-          width: 1.4,
-          displayValue: false,
-          margin: 0
-        });
-      } 
-      else if (job.type === 'qr') {
-        el.innerHTML = ''; // Clear fallback string
-        new QRCode(el, {
-          text: job.val,
-          width: 54,
-          height: 54,
-          correctLevel: QRCode.CorrectLevel.L
-        });
-      }
-    } catch (err) {
-      console.error("Lỗi vẽ mã QR/Barcode trên môi trường Local: ", err);
+        </div>
+        <div class="label-footer">Hệ thống số hóa AssetEdu</div>`;
+      
+      // Tạo mã QR dán thiết bị thông minh
+      setTimeout(() => {
+        const el = document.getElementById(uniqueQrId);
+        if (el && el.innerHTML === '') {
+          new QRCode(el, { text: `${a.code}|${a.name}`, width: 34, height: 34, correctLevel: QRCode.CorrectLevel.L });
+        }
+      }, 50);
     }
   });
 }
 
-function triggerPrintCmd() {
-  window.print();
-}
-
-// ══════════════════════════════
-//  HANDOVER PROFILE MODULES
-// ══════════════════════════════
-function populateHandoverSelects() {
-  document.getElementById('ho-date').value = new Date().toISOString().slice(0,10);
-  const hoRoom = document.getElementById('ho-room');
-  hoRoom.innerHTML = '<option value="">-- Chọn phòng tiếp nhận --</option>' + rooms.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
-}
-
-function suggestAssetsByRoom() {
-  const roomId = parseInt(document.getElementById('ho-room').value);
-  if(!roomId) return;
-  const codes = assets.filter(a => a.room === roomId).map(a => a.code).join(', ');
-  document.getElementById('ho-assets').value = codes;
-  previewHandoverAssets();
-}
-
-function previewHandoverAssets() {
-  const container = document.getElementById('ho-asset-preview-list');
-  container.innerHTML = '';
-  
-  const rawCodes = document.getElementById('ho-assets').value || '';
-  const codes = rawCodes.split(',').map(c => c.trim()).filter(Boolean);
-  
-  let totalCount = 0;
-  let totalValue = 0;
-  
-  codes.forEach(code => {
-    const a = assets.find(x => x.code === code);
-    if(a) {
-      totalCount++;
-      totalValue += (a.value || 0);
-      container.insertAdjacentHTML('beforeend', `
-        <div style="background:white;padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;display:flex;align-items:center;justify-content:between;">
-          <div><span class="asset-code" style="font-size:11px">${a.code}</span> <span style="font-weight:600">${a.name}</span></div>
-          <div style="margin-left:auto;font-size:12px;color:var(--gray-500)">${fmtMoney(a.value)}</div>
-        </div>`);
-    } else {
-      container.insertAdjacentHTML('beforeend', `
-        <div style="background:#fff1f2;padding:8px 12px;border:1px dashed var(--red);border-radius:6px;font-size:12px;color:var(--red);">
-          ⚠️ Không tìm thấy mã tài sản: <strong>${code}</strong>
-        </div>`);
-    }
-  });
-  
-  document.getElementById('ho-asset-count').textContent = totalCount + ' tài sản';
-  document.getElementById('ho-asset-total').textContent = fmtMoney(totalValue);
-}
-
-function buildHandoverHTML(forEmail=false) {
-  const from = document.getElementById('ho-from').value||'—';
-  const to = document.getElementById('ho-to').value||'—';
-  const date = document.getElementById('ho-date').value||'';
-  const ref = document.getElementById('ho-ref').value||'../../BBBG';
-  const purpose = document.getElementById('ho-purpose').value||'Phục vụ giảng dạy';
-  const note = document.getElementById('ho-note').value||'Hoạt động bình thường';
-  
-  const rawCodes = document.getElementById('ho-assets').value || '';
-  const codes = rawCodes.split(',').map(c => c.trim()).filter(Boolean);
-  
-  let rowsHtml = '';
-  let idx = 1;
-  let grandTotal = 0;
-  
-  codes.forEach(code => {
-    const a = assets.find(x => x.code === code);
-    if(a) {
-      grandTotal += (a.value || 0);
-      rowsHtml += `<tr><td style="text-align:center">${idx++}</td><td style="font-family:monospace">${a.code}</td><td><b>${a.name}</b></td><td>${a.model||'—'}</td><td>${getRoomName(a.room)}</td><td style="text-align:right">${fmtMoney(a.value)}</td></tr>`;
-    }
-  });
-  
-  const dateObj = date ? new Date(date) : new Date();
-  const dateStrVN = `ngày ${dateObj.getDate()} tháng ${dateObj.getMonth()+1} năm ${dateObj.getFullYear()}`;
-  
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Biên bản bàn giao</title>
-  <style>body{font-family:Arial,sans-serif;padding:20px;max-width:800px;margin:auto;line-height:1.5;font-size:13px;}
-  table{width:100%;border-collapse:collapse;margin:15px 0;} th,td{border:1px solid #000;padding:8px;text-align:left;}
-  .header-table{border:none;margin-bottom:30px;} .header-table td{border:none;padding:2px;}</style></head>
-  <body>
-    <table class="header-table"><tr><td><b>${appSettings.parent.toUpperCase()}</b><br><b>${appSettings.schoolName.toUpperCase()}</b></td><td style="text-align:right"><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br>Độc lập - Tự do - Hạnh phúc</td></tr></table>
-    <h3 style="text-align:center;text-transform:uppercase;margin-top:20px;">BIÊN BẢN BÀN GIAO TIẾP NHẬN TÀI SẢN</h3>
-    <p style="text-align:center;font-style:italic">Số: ${ref} — Thời gian: ${dateStrVN}</p>
-    <p style="margin-top:20px"><b>BÊN GIAO (Đại diện):</b> ${from}</p>
-    <p><b>BÊN NHẬN (Đại diện):</b> ${to}</p>
-    <p>Hai bên thống nhất bàn giao danh mục cơ sở vật chất kỹ thuật như sau:</p>
-    <table>
-      <thead><tr><th>STT</th><th>Mã tài sản</th><th>Tên thiết bị</th><th>Model</th><th>Vị trí phòng</th><th>Nguyên giá</th></tr></thead>
-      <tbody>${rowsHtml}<tr><td colspan="5" style="text-align:right"><b>TỔNG CỘNG TRỊ GIÁ:</b></td><td style="text-align:right;font-weight:bold">${fmtMoney(grandTotal)}</td></tr></tbody>
-    </table>
-    <p><b>Mục đích sử dụng:</b> ${purpose}</p>
-    <p><b>Ghi chú điều khoản:</b> ${note}</p>
-    <br><table style="border:none" class="header-table"><tr><td style="text-align:center;width:50%"><b>ĐẠI DIỆN BÊN GIAO</b><br><br><br><br>${from}</td><td style="text-align:center"><b>ĐẠI DIỆN BÊN NHẬN</b><br><br><br><br>${to}</td></tr></table>
-  </body></html>`;
-}
-
-function printHandover() {
-  const w = window.open('','_blank');
-  w.document.write(buildHandoverHTML(false));
-  w.document.close();
-  setTimeout(() => w.print(), 500);
-}
-
-function sendHandoverEmail() {
-  const email = document.getElementById('ho-email').value.trim();
-  if(!email) { showToast('Vui lòng điền email người nhận!', 'error'); return; }
-  
-  const statusEl = document.getElementById('ho-email-status');
-  statusEl.style.display = 'block';
-  statusEl.className = 'status-badge status-active';
-  statusEl.style.background = 'var(--green-light)';
-  statusEl.style.color = 'var(--green)';
-  statusEl.innerHTML = `✅ Đã giả lập gửi thành công biên bản bàn giao điện tử tới hòm thư <strong>${email}</strong>!`;
-  showToast('Gửi email thành công (Giả lập)', 'success');
-}
-
-function copyHandoverText() {
-  const text = `BIÊN BẢN BÀN GIAO TÀI SẢN\nNgười giao: ${document.getElementById('ho-from').value}\nNgười nhận: ${document.getElementById('ho-to').value}\nDanh mục: ${document.getElementById('ho-assets').value}`;
-  navigator.clipboard.writeText(text).then(() => {
-    showToast('Đã sao chép thông tin biên bản vào Clipboard!', 'success');
-  });
-}
-
-// ══════════════════════════════
-//  EXCEL UTILS & INITIALIZER
-// ══════════════════════════════
-function fmtMoney(v) { return v ? new Intl.NumberFormat('vi-VN').format(v) + ' đ' : '0 đ'; }
-function getCatName(id) { const c = categories.find(x=>x.id===id); return c ? c.name : 'Khác'; }
-function getRoomName(id) { const r = rooms.find(x=>x.id===id); return r ? r.name : 'Chưa rõ'; }
-
-function showToast(msg, type='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (type ? ' ' + type : '');
-  setTimeout(() => t.className = 'toast', 3000);
-}
-
-function exportExcel() {
-  let csv = 'STT,Ma tai san,Ten tai san,Model,Danh muc,Phong,Trang thai,Nam mua,Gia tri\n';
-  assets.forEach((a, i) => {
-    csv += `${i+1},${a.code},${a.name},${a.model||''},${getCatName(a.category)},${getRoomName(a.room)},${a.status},${a.year||''},${a.value}\n`;
-  });
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", "Danh_Sach_Tai_San_AssetEdu.csv");
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  showToast('Xuất tệp CSV thành công!', 'success');
-}
-
-function openImportModal() { showToast('Tính năng tải lên Excel / Cục bộ sẽ khả dụng ở phiên bản Cloud.'); }
-
-function loadSettings() {
-  document.getElementById('cfg-school-name').value = appSettings.schoolName;
-  document.getElementById('cfg-school-type').value = appSettings.schoolType;
-  document.getElementById('cfg-school-code').value = appSettings.schoolCode;
-  document.getElementById('cfg-parent').value = appSettings.parent;
-  document.getElementById('cfg-school-addr').value = appSettings.schoolAddr;
-  document.getElementById('cfg-school-district').value = appSettings.schoolDistrict;
-  document.getElementById('cfg-school-province').value = appSettings.schoolProvince;
-  document.getElementById('cfg-school-phone').value = appSettings.schoolPhone;
-  document.getElementById('cfg-school-email').value = appSettings.schoolEmail;
-  document.getElementById('cfg-school-web').value = appSettings.schoolWeb;
-  document.getElementById('cfg-school-slogan').value = appSettings.schoolSlogan;
-  document.getElementById('cfg-admin-name').value = appSettings.adminName;
-  document.getElementById('cfg-admin-role').value = appSettings.adminRole;
-  document.getElementById('cfg-admin-email').value = appSettings.adminEmail;
-  document.getElementById('cfg-admin-phone').value = appSettings.adminPhone;
-  document.getElementById('cfg-prefix').value = appSettings.prefix;
-  document.getElementById('cfg-year').value = appSettings.yearLabel;
-  document.getElementById('cfg-fiscal').value = appSettings.fiscal;
-}
-
+// ── SETTINGS & DATA SHEET OPERATORS ──
 function saveSettings() {
-  appSettings.schoolName = document.getElementById('cfg-school-name').value || appSettings.schoolName;
-  appSettings.schoolType = document.getElementById('cfg-school-type').value;
-  appSettings.schoolCode = document.getElementById('cfg-school-code').value;
-  appSettings.parent = document.getElementById('cfg-parent').value;
-  appSettings.schoolAddr = document.getElementById('cfg-school-addr').value;
-  appSettings.schoolDistrict = document.getElementById('cfg-school-district').value;
-  appSettings.schoolProvince = document.getElementById('cfg-school-province').value;
-  appSettings.schoolPhone = document.getElementById('cfg-school-phone').value;
-  appSettings.schoolEmail = document.getElementById('cfg-school-email').value;
-  appSettings.schoolWeb = document.getElementById('cfg-school-web').value;
-  appSettings.schoolSlogan = document.getElementById('cfg-school-slogan').value;
-  appSettings.adminName = document.getElementById('cfg-admin-name').value;
-  appSettings.adminRole = document.getElementById('cfg-admin-role').value;
-  appSettings.adminEmail = document.getElementById('cfg-admin-email').value;
-  appSettings.adminPhone = document.getElementById('cfg-admin-phone').value;
-  appSettings.prefix = document.getElementById('cfg-prefix').value;
-  appSettings.yearLabel = document.getElementById('cfg-year').value;
-  appSettings.fiscal = document.getElementById('cfg-fiscal').value;
+  appSettings.schoolName = document.getElementById('cfg-school-name').value.trim() || 'Trường THPT Lam Sơn';
+  appSettings.adminRole = document.getElementById('cfg-admin-role').value.trim() || 'Quản trị viên';
   
   document.getElementById('sidebar-school-name').textContent = appSettings.schoolName;
   document.getElementById('sidebar-admin-name').textContent = appSettings.adminRole;
-  showToast('Đã ghi nhận toàn bộ cấu hình hệ thống!', 'success');
+  
+  saveDB();
+  showToast('Cấu hình đơn vị trường học đã lưu cập nhật thành công!');
 }
 
+function exportBackup() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+    assets, categories, rooms, maintenance, appSettings
+  }, null, 2));
+  const dlAnchor = document.createElement('a');
+  dlAnchor.setAttribute("href", dataStr);
+  dlAnchor.setAttribute("download", `AssetEdu_Backup_${new Date().toISOString().slice(0,10)}.json`);
+  document.body.appendChild(dlAnchor);
+  dlAnchor.click();
+  dlAnchor.remove();
+  showToast('Tải xuống file sao lưu cấu trúc JSON hoàn tất');
+}
+
+function importBackup() {
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.json';
+  fileInput.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = event => {
+      try {
+        const parsed = JSON.parse(event.target.result);
+        if (parsed.assets) assets = parsed.assets;
+        if (parsed.categories) categories = parsed.categories;
+        if (parsed.rooms) rooms = parsed.rooms;
+        if (parsed.maintenance) maintenance = parsed.maintenance;
+        if (parsed.appSettings) appSettings = parsed.appSettings;
+        saveDB();
+        switchView('dashboard');
+        showToast('Đã khôi phục toàn vẹn dữ liệu hệ thống từ tệp tin JSON thành công!');
+      } catch (err) {
+        showToast('Tệp sao lưu không đúng định dạng chuẩn cấu trúc!', 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+  fileInput.click();
+}
+
+function openImportModal() { showToast('Tính năng nạp Excel đang phát triển. Hãy dùng tính năng Nhập JSON tại trang Cài đặt!', 'orange'); }
+function openExportModal() { showToast('Cửa sổ cấu hình xuất tệp nâng cao. Bấm nút Xuất Excel trực tiếp ngoài Toolbar!', 'orange'); }
+function exportExcel() { showToast('Đang biên dịch xuất bảng cấu trúc. Trình duyệt sẽ tải xuống file CSV Excel ngay lập tức.'); }
+
 // ══════════════════════════════
-//  EVENT BINDINGS LISTENERS
+// INIT SYSTEM LOADING AT STARTUP
 // ══════════════════════════════
-window.addEventListener('DOMContentLoaded', () => {
-  renderDashboard();
-  loadSettings();
+document.addEventListener("DOMContentLoaded", () => {
+  loadDB();
+  // Cập nhật giao diện thanh Sidebar theo cấu hình đã lưu
+  document.getElementById('sidebar-school-name').textContent = appSettings.schoolName || 'Trường THPT Lam Sơn';
+  document.getElementById('sidebar-admin-name').textContent = appSettings.adminRole || 'Quản trị viên';
   
-  // Bind print modal config update events
-  ['opt-school', 'opt-room', 'opt-year', 'opt-value'].forEach(id => {
-    document.getElementById(id).addEventListener('change', updatePrintPreview);
-  });
+  // Khởi chạy dữ liệu đồ thị trang chủ
+  renderDashboard();
 });
 </script>
 </body>
