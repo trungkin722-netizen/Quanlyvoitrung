@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AssetEdu — Quản lý Tài sản Trường học</title>
+<title>Em Trung — Quản lý Tài sản Trường học</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js"></script>
@@ -328,6 +328,7 @@ input[type="checkbox"] {
   display: none; align-items: center; justify-content: center;
 }
 .modal-overlay.show { display: flex; }
+.modal-overlay.active { display: flex; }
 .modal {
   background: white;
   border-radius: var(--radius-lg);
@@ -1346,6 +1347,100 @@ input[type="checkbox"] {
       <div style="display:flex;gap:8px;">
         <button class="btn btn-secondary" onclick="closeExportModal()">Hủy</button>
         <button class="btn btn-primary" onclick="doExport()">⬇ Xuất ngay</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ IMPORT MODAL ═══ -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal" style="width:780px; max-width:97vw;">
+    <div class="modal-header">
+      <div class="modal-title">⬆ Nhập dữ liệu từ file Excel</div>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding-bottom:8px;">
+
+      <!-- Step 1: Upload -->
+      <div id="import-step-1">
+        <div style="background:var(--blue-light);border-radius:var(--radius);padding:12px 14px;font-size:13px;color:var(--blue);margin-bottom:16px;">
+          💡 Tải file Excel (<code>.xlsx</code> / <code>.xls</code> / <code>.csv</code>) đúng định dạng cột. Bấm <strong>Tải file mẫu</strong> để xem cấu trúc cần nhập.
+        </div>
+
+        <!-- Drop zone -->
+        <div id="import-dropzone"
+          style="border:2px dashed var(--gray-300);border-radius:var(--radius-lg);padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--gray-50);"
+          onclick="document.getElementById('import-file-input').click()"
+          ondragover="importDragOver(event)" ondragleave="importDragLeave(event)" ondrop="importDrop(event)">
+          <div style="font-size:40px;margin-bottom:10px;">📂</div>
+          <div style="font-size:15px;font-weight:600;color:var(--gray-700);margin-bottom:4px;">Kéo thả file vào đây hoặc bấm để chọn</div>
+          <div style="font-size:12px;color:var(--gray-400);">Hỗ trợ .xlsx, .xls, .csv — tối đa 5MB</div>
+          <input type="file" id="import-file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(this.files[0])">
+        </div>
+
+        <div style="margin-top:12px;display:flex;align-items:center;gap:12px;">
+          <button class="btn btn-secondary btn-sm" onclick="downloadImportTemplate()">📥 Tải file mẫu (.xlsx)</button>
+          <span style="font-size:12px;color:var(--gray-400);">Dùng file mẫu để điền đúng cột và định dạng</span>
+        </div>
+
+        <!-- Column guide -->
+        <div style="margin-top:16px;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;">
+          <div style="background:var(--gray-50);padding:8px 14px;font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--gray-200);">
+            Cấu trúc cột yêu cầu
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+              <thead>
+                <tr style="background:var(--navy);color:white;">
+                  <th style="padding:7px 10px;text-align:left;font-weight:600;">Tên cột</th>
+                  <th style="padding:7px 10px;text-align:left;font-weight:600;">Bắt buộc</th>
+                  <th style="padding:7px 10px;text-align:left;font-weight:600;">Mô tả / Giá trị hợp lệ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid var(--gray-100);"><td style="padding:6px 10px;font-family:monospace;color:var(--blue)">ma_tai_san</td><td style="padding:6px 10px;color:var(--green)">✔ Có</td><td style="padding:6px 10px;color:var(--gray-600)">Mã tài sản duy nhất, VD: TS-IT-001</td></tr>
+                <tr style="border-bottom:1px solid var(--gray-100);background:var(--gray-50)"><td style="padding:6px 10px;font-family:monospace;color:var(--blue)">ten_tai_san</td><td style="padding:6px 10px;color:var(--green)">✔ Có</td><td style="padding:6px 10px;color:var(--gray-600)">Tên tài sản</td></tr>
+                <tr style="border-bottom:1px solid var(--gray-100);"><td style="padding:6px 10px;font-family:monospace;color:var(--blue)">danh_muc</td><td style="padding:6px 10px;color:var(--green)">✔ Có</td><td style="padding:6px 10px;color:var(--gray-600)">Tên danh mục (phải khớp hoặc sẽ tạo mới)</td></tr>
+                <tr style="border-bottom:1px solid var(--gray-100);background:var(--gray-50)"><td style="padding:6px 10px;font-family:monospace;color:var(--blue)">phong</td><td style="padding:6px 10px;color:var(--green)">✔ Có</td><td style="padding:6px 10px;color:var(--gray-600)">Tên phòng / địa điểm (phải khớp hoặc sẽ tạo mới)</td></tr>
+                <tr style="border-bottom:1px solid var(--gray-100);"><td style="padding:6px 10px;font-family:monospace;color:var(--blue)">trang_thai</td><td style="padding:6px 10px;color:var(--gray-400)">— Không</td><td style="padding:6px 10px;color:var(--gray-600)">active / maintenance / broken / inactive (mặc định: active)</td></tr>
+                <tr style="border-bottom:1px solid var(--gray-100);background:var(--gray-50)"><td style="padding:6px 10px;font-family:monospace;color:var(--blue)">model</td><td style="padding:6px 10px;color:var(--gray-400)">— Không</td><td style="padding:6px 10px;color:var(--gray-600)">Thương hiệu / model thiết bị</td></tr>
+                <tr style="border-bottom:1px solid var(--gray-100);"><td style="padding:6px 10px;font-family:monospace;color:var(--blue)">nam_mua</td><td style="padding:6px 10px;color:var(--gray-400)">— Không</td><td style="padding:6px 10px;color:var(--gray-600)">Năm mua, VD: 2023</td></tr>
+                <tr style="border-bottom:1px solid var(--gray-100);background:var(--gray-50)"><td style="padding:6px 10px;font-family:monospace;color:var(--blue)">gia_tri</td><td style="padding:6px 10px;color:var(--gray-400)">— Không</td><td style="padding:6px 10px;color:var(--gray-600)">Giá trị (VNĐ), chỉ số, VD: 15000000</td></tr>
+                <tr style="border-bottom:1px solid var(--gray-100);"><td style="padding:6px 10px;font-family:monospace;color:var(--blue)">serial</td><td style="padding:6px 10px;color:var(--gray-400)">— Không</td><td style="padding:6px 10px;color:var(--gray-600)">Số serial</td></tr>
+                <tr style="border-bottom:1px solid var(--gray-100);background:var(--gray-50)"><td style="padding:6px 10px;font-family:monospace;color:var(--blue)">nguoi_su_dung</td><td style="padding:6px 10px;color:var(--gray-400)">— Không</td><td style="padding:6px 10px;color:var(--gray-600)">Tên người / bộ phận sử dụng</td></tr>
+                <tr><td style="padding:6px 10px;font-family:monospace;color:var(--blue)">ghi_chu</td><td style="padding:6px 10px;color:var(--gray-400)">— Không</td><td style="padding:6px 10px;color:var(--gray-600)">Ghi chú thêm</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Preview -->
+      <div id="import-step-2" style="display:none;">
+        <div id="import-summary" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;"></div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--gray-700);">Xem trước dữ liệu sẽ nhập:</div>
+        <div style="max-height:320px;overflow-y:auto;border:1px solid var(--gray-200);border-radius:var(--radius);">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead id="import-preview-head" style="position:sticky;top:0;z-index:1;"></thead>
+            <tbody id="import-preview-body"></tbody>
+          </table>
+        </div>
+        <div id="import-warnings" style="margin-top:12px;"></div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="import-skip-dup" checked style="accent-color:var(--blue)">
+          <label for="import-skip-dup" style="font-size:13px;cursor:pointer;">Bỏ qua hàng trùng mã tài sản (không ghi đè)</label>
+        </div>
+        <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="import-create-cat" checked style="accent-color:var(--blue)">
+          <label for="import-create-cat" style="font-size:13px;cursor:pointer;">Tự động tạo danh mục / phòng mới nếu chưa tồn tại</label>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;" id="import-footer">
+      <button class="btn btn-secondary" onclick="closeImportModal()">Đóng</button>
+      <div style="display:flex;gap:8px;" id="import-action-btns">
+        <!-- filled by JS -->
       </div>
     </div>
   </div>
@@ -2382,7 +2477,296 @@ function exportExcel() {
   URL.revokeObjectURL(url);
   showToast('Đã xuất file CSV thành công!','success');
 }
-function openImportModal() { showToast('Tính năng nhập Excel sẽ sớm có!'); }
+// ══════════════════════════════════════════════════════════
+//  IMPORT EXCEL — nhập dữ liệu tài sản từ file .xlsx/.csv
+// ══════════════════════════════════════════════════════════
+
+let importParsedRows = [];   // mảng object đã parse từ file
+
+/* --- Mở / đóng modal --- */
+function openImportModal() {
+  importParsedRows = [];
+  document.getElementById('import-step-1').style.display = '';
+  document.getElementById('import-step-2').style.display = 'none';
+  document.getElementById('import-action-btns').innerHTML = '';
+  document.getElementById('import-file-input').value = '';
+  const dz = document.getElementById('import-dropzone');
+  dz.style.borderColor = 'var(--gray-300)';
+  dz.style.background  = 'var(--gray-50)';
+  document.getElementById('import-modal').classList.add('active');
+}
+function closeImportModal() {
+  document.getElementById('import-modal').classList.remove('active');
+}
+
+/* --- Drag & Drop --- */
+function importDragOver(e) {
+  e.preventDefault();
+  const dz = document.getElementById('import-dropzone');
+  dz.style.borderColor = 'var(--blue)';
+  dz.style.background  = 'var(--blue-light)';
+}
+function importDragLeave(e) {
+  const dz = document.getElementById('import-dropzone');
+  dz.style.borderColor = 'var(--gray-300)';
+  dz.style.background  = 'var(--gray-50)';
+}
+function importDrop(e) {
+  e.preventDefault();
+  importDragLeave(e);
+  const file = e.dataTransfer.files[0];
+  if (file) handleImportFile(file);
+}
+
+/* --- Tải SheetJS động nếu chưa có --- */
+function ensureSheetJS(cb) {
+  if (window.XLSX) { cb(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.onload = cb;
+  s.onerror = () => showToast('Không tải được thư viện đọc Excel!', 'error');
+  document.head.appendChild(s);
+}
+
+/* --- Xử lý file được chọn --- */
+function handleImportFile(file) {
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['xlsx','xls','csv'].includes(ext)) {
+    showToast('Chỉ chấp nhận file .xlsx, .xls hoặc .csv', 'error'); return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('File quá lớn (tối đa 5 MB)', 'error'); return;
+  }
+
+  ensureSheetJS(() => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data  = new Uint8Array(e.target.result);
+        const wb    = XLSX.read(data, { type: 'array' });
+        const ws    = wb.Sheets[wb.SheetNames[0]];
+        const json  = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        if (!json.length) { showToast('File không có dữ liệu!', 'error'); return; }
+        importParsedRows = json;
+        showImportPreview(json);
+      } catch(err) {
+        showToast('Lỗi đọc file: ' + err.message, 'error');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+/* --- Chuẩn hóa tên cột (chấp nhận cả tên cột tiếng Anh/Việt) --- */
+const COL_MAP = {
+  ma_tai_san:    ['ma_tai_san','mã tài sản','mataitsan','ma','code','asset_code','asset code'],
+  ten_tai_san:   ['ten_tai_san','tên tài sản','tentaitsan','ten','name','asset_name','tên'],
+  danh_muc:      ['danh_muc','danh mục','danhmuc','category','danh mục'],
+  phong:         ['phong','phòng','room','location','địa điểm','dia_diem'],
+  trang_thai:    ['trang_thai','trạng thái','trangthai','status','tình trạng','tinh_trang'],
+  model:         ['model','brand','thương hiệu','thuong_hieu'],
+  nam_mua:       ['nam_mua','năm mua','nammua','year','năm'],
+  gia_tri:       ['gia_tri','giá trị','giatri','value','giá','gia'],
+  serial:        ['serial','số serial','so_serial','serial_number'],
+  nguoi_su_dung: ['nguoi_su_dung','người sử dụng','nguoisudung','user','người dùng','nguoi_dung'],
+  ghi_chu:       ['ghi_chu','ghi chú','ghichu','note','notes','ghi chú'],
+};
+
+function normalizeHeader(raw) {
+  const s = String(raw).toLowerCase().trim().replace(/\s+/g,'_');
+  for (const [key, aliases] of Object.entries(COL_MAP)) {
+    if (aliases.includes(s) || aliases.includes(String(raw).toLowerCase().trim())) return key;
+  }
+  return s;
+}
+
+function normalizeRow(rawRow) {
+  const out = {};
+  for (const [k, v] of Object.entries(rawRow)) {
+    out[normalizeHeader(k)] = String(v).trim();
+  }
+  return out;
+}
+
+/* --- Hiển thị preview --- */
+function showImportPreview(rawRows) {
+  const rows = rawRows.map(normalizeRow);
+
+  // Phân tích lỗi
+  const warnings = [];
+  const valid = [], skipped = [];
+  const existingCodes = new Set(assets.map(a => a.code.toLowerCase()));
+
+  rows.forEach((r, i) => {
+    const rowNum = i + 2; // header là dòng 1
+    if (!r.ma_tai_san)  { warnings.push(`Dòng ${rowNum}: Thiếu <b>mã tài sản</b>`); skipped.push(i); return; }
+    if (!r.ten_tai_san) { warnings.push(`Dòng ${rowNum}: Thiếu <b>tên tài sản</b>`); skipped.push(i); return; }
+    if (!r.danh_muc)    { warnings.push(`Dòng ${rowNum}: Thiếu <b>danh mục</b>`); skipped.push(i); return; }
+    if (!r.phong)       { warnings.push(`Dòng ${rowNum}: Thiếu <b>phòng</b>`); skipped.push(i); return; }
+    if (existingCodes.has(r.ma_tai_san.toLowerCase())) {
+      warnings.push(`Dòng ${rowNum}: Mã <b>${r.ma_tai_san}</b> đã tồn tại`);
+    }
+    valid.push(i);
+  });
+
+  // Summary badges
+  const sumEl = document.getElementById('import-summary');
+  sumEl.innerHTML = `
+    <span style="background:var(--green-light);color:var(--green);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;">✔ ${rows.length} dòng tổng</span>
+    <span style="background:var(--blue-light);color:var(--blue);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;">📋 ${valid.length} dòng hợp lệ</span>
+    ${skipped.length ? `<span style="background:var(--red-light);color:var(--red);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;">✖ ${skipped.length} dòng lỗi</span>` : ''}
+    ${warnings.length - skipped.length > 0 ? `<span style="background:var(--accent-light);color:var(--orange);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;">⚠ ${warnings.length - skipped.length} cảnh báo</span>` : ''}
+  `;
+
+  // Preview table
+  const previewCols = ['ma_tai_san','ten_tai_san','danh_muc','phong','trang_thai','model','nam_mua','gia_tri','serial','nguoi_su_dung','ghi_chu'];
+  const colLabels   = ['Mã tài sản','Tên tài sản','Danh mục','Phòng','Trạng thái','Model','Năm mua','Giá trị','Serial','Người SD','Ghi chú'];
+
+  document.getElementById('import-preview-head').innerHTML = `
+    <tr style="background:var(--navy);color:white;">
+      <th style="padding:7px 8px;text-align:center;min-width:36px;">#</th>
+      ${colLabels.map(l => `<th style="padding:7px 10px;text-align:left;font-size:11px;white-space:nowrap;">${l}</th>`).join('')}
+      <th style="padding:7px 8px;text-align:center;">T.Thái</th>
+    </tr>`;
+
+  const existCodesSet = new Set(assets.map(a => a.code.toLowerCase()));
+  document.getElementById('import-preview-body').innerHTML = rows.slice(0, 200).map((r, i) => {
+    const isSkipped  = skipped.includes(i);
+    const isDup      = !isSkipped && existCodesSet.has((r.ma_tai_san||'').toLowerCase());
+    const rowBg      = isSkipped ? '#fff5f5' : isDup ? '#fffbeb' : (i%2===0 ? '' : 'var(--gray-50)');
+    const statusBadge = isSkipped
+      ? `<span style="color:var(--red);font-size:11px;font-weight:700;">✖ Lỗi</span>`
+      : isDup
+        ? `<span style="color:var(--orange);font-size:11px;font-weight:700;">⚠ Trùng</span>`
+        : `<span style="color:var(--green);font-size:11px;font-weight:700;">✔ OK</span>`;
+    return `<tr style="background:${rowBg};border-bottom:1px solid var(--gray-100);">
+      <td style="padding:5px 8px;text-align:center;color:var(--gray-400);font-size:11px;">${i+2}</td>
+      ${previewCols.map(c => `<td style="padding:5px 10px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(r[c]||'').replace(/"/g,'&quot;')}">${r[c]||'<span style="color:var(--gray-300)">—</span>'}</td>`).join('')}
+      <td style="padding:5px 8px;text-align:center;">${statusBadge}</td>
+    </tr>`;
+  }).join('') + (rows.length > 200 ? `<tr><td colspan="${previewCols.length+2}" style="padding:8px;text-align:center;color:var(--gray-400);font-size:12px;">... và ${rows.length-200} dòng khác</td></tr>` : '');
+
+  // Warnings box
+  const warnEl = document.getElementById('import-warnings');
+  warnEl.innerHTML = warnings.length ? `
+    <div style="background:var(--accent-light);border:1px solid #fcd34d;border-radius:var(--radius);padding:10px 14px;max-height:100px;overflow-y:auto;">
+      <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--orange);">⚠ Cảnh báo (${warnings.length})</div>
+      ${warnings.map(w=>`<div style="font-size:12px;color:var(--gray-700);margin-bottom:3px;">• ${w}</div>`).join('')}
+    </div>` : '';
+
+  // Show step 2
+  document.getElementById('import-step-1').style.display = 'none';
+  document.getElementById('import-step-2').style.display = '';
+  document.getElementById('import-action-btns').innerHTML = `
+    <button class="btn btn-secondary" onclick="resetImportToStep1()">← Chọn file khác</button>
+    <button class="btn btn-primary" onclick="doImport()" ${valid.length===0?'disabled':''}>
+      ⬆ Nhập ${valid.length} tài sản
+    </button>`;
+}
+
+/* --- Quay lại bước 1 --- */
+function resetImportToStep1() {
+  importParsedRows = [];
+  document.getElementById('import-step-1').style.display = '';
+  document.getElementById('import-step-2').style.display = 'none';
+  document.getElementById('import-action-btns').innerHTML = '';
+  document.getElementById('import-file-input').value = '';
+}
+
+/* --- Thực hiện import --- */
+function doImport() {
+  const rows       = importParsedRows.map(normalizeRow);
+  const skipDup    = document.getElementById('import-skip-dup').checked;
+  const createCat  = document.getElementById('import-create-cat').checked;
+  const validStatuses = ['active','maintenance','broken','inactive'];
+  const existCodes = new Set(assets.map(a => a.code.toLowerCase()));
+
+  let added = 0, skippedDup = 0, skippedErr = 0;
+
+  rows.forEach(r => {
+    if (!r.ma_tai_san || !r.ten_tai_san || !r.danh_muc || !r.phong) { skippedErr++; return; }
+
+    if (existCodes.has(r.ma_tai_san.toLowerCase())) {
+      if (skipDup) { skippedDup++; return; }
+    }
+
+    // Tìm hoặc tạo danh mục
+    let cat = categories.find(c => c.name.toLowerCase() === r.danh_muc.toLowerCase());
+    if (!cat) {
+      if (!createCat) { skippedErr++; return; }
+      cat = { id: nextCatId++, code: r.danh_muc.substring(0,3).toUpperCase(), name: r.danh_muc };
+      categories.push(cat);
+    }
+
+    // Tìm hoặc tạo phòng
+    let room = rooms.find(rm => rm.name.toLowerCase() === r.phong.toLowerCase());
+    if (!room) {
+      if (!createCat) { skippedErr++; return; }
+      room = { id: nextRoomId++, name: r.phong, floor: '' };
+      rooms.push(room);
+    }
+
+    const status = validStatuses.includes((r.trang_thai||'').toLowerCase())
+      ? r.trang_thai.toLowerCase() : 'active';
+
+    const asset = {
+      id:       nextId++,
+      code:     r.ma_tai_san,
+      name:     r.ten_tai_san,
+      model:    r.model || '',
+      category: cat.id,
+      room:     room.id,
+      status:   status,
+      year:     parseInt(r.nam_mua) || '',
+      value:    parseFloat(String(r.gia_tri).replace(/[^0-9.]/g,'')) || 0,
+      serial:   r.serial || '',
+      user:     r.nguoi_su_dung || '',
+      note:     r.ghi_chu || '',
+    };
+
+    assets.push(asset);
+    existCodes.add(asset.code.toLowerCase());
+    added++;
+  });
+
+  filteredAssets = [...assets];
+  saveDB();
+  closeImportModal();
+
+  let msg = `✔ Nhập thành công ${added} tài sản!`;
+  if (skippedDup)  msg += ` (${skippedDup} bỏ qua do trùng mã)`;
+  if (skippedErr)  msg += ` (${skippedErr} dòng lỗi bị bỏ qua)`;
+  showToast(msg, 'success');
+
+  if (currentView === 'assets')    renderAssets();
+  if (currentView === 'dashboard') renderDashboard();
+}
+
+/* --- Tải file mẫu --- */
+function downloadImportTemplate() {
+  ensureSheetJS(() => {
+    const headers = [
+      'ma_tai_san','ten_tai_san','danh_muc','phong','trang_thai',
+      'model','nam_mua','gia_tri','serial','nguoi_su_dung','ghi_chu'
+    ];
+    const samples = [
+      ['TS-IT-010','Máy tính HP','Thiết bị máy tính','Phòng máy tính 101','active','HP ProDesk 400',2023,18000000,'SN001','Phòng máy tính',''],
+      ['TS-AV-010','Máy chiếu Epson','Thiết bị nghe nhìn','Phòng họp Ban Giám hiệu','active','Epson EB-X51',2022,12000000,'SN002','','Dùng họp'],
+      ['TS-FN-010','Bàn học sinh','Nội thất - Đồ đạc','Thư viện','active','Hòa Phát',2021,1200000,'','',''],
+    ];
+    const wsData = [headers, ...samples];
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    // Column widths
+    ws['!cols'] = [16,24,22,26,14,20,10,14,14,20,20].map(w=>({wch:w}));
+    XLSX.utils.book_append_sheet(wb, ws, 'Danh sach tai san');
+    XLSX.writeFile(wb, 'MauNhapTaiSan_AssetEdu.xlsx');
+    showToast('Đã tải file mẫu!', 'success');
+  });
+}
+
+// nextCatId và nextRoomId đã được khai báo ở trên (dòng ~1814, ~1846)
 
 // ══════════════════════════════
 //  TOAST
@@ -2699,7 +3083,10 @@ document.getElementById('opt-value').addEventListener('change', updatePrintPrevi
 // Close modal on overlay click
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', function(e) {
-    if (e.target === this) this.classList.remove('show');
+    if (e.target === this) {
+      this.classList.remove('show');
+      this.classList.remove('active');
+    }
   });
 });
 
